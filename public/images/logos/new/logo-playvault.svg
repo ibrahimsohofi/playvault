@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+  <g transform="translate(100, 100) scale(0.6)">
+    <!-- Play button triangle inside circle -->
+    <circle cx="250" cy="250" r="120" fill="black"/>
+    <path d="M215,190 L310,250 L215,310 Z" fill="#00f7ff"/>
+
+    <!-- Curved arrow path -->
+    <path d="M250,100 C375,100 450,175 450,300 C450,350 425,400 375,425 M200,425 C125,400 50,325 50,250 C50,175 100,125 175,100"
+          stroke="#00f7ff" stroke-width="50" fill="none" stroke-linecap="round"/>
+
+    <!-- Arrow head at start -->
+    <path d="M175,170 L175,30 L50,100 Z" fill="#00f7ff"/>
+
+    <!-- Rays -->
+    <path d="M400,150 L450,100 L420,180 Z" fill="#4dffb8"/>
+    <path d="M450,200 L500,150 L470,230 Z" fill="#4dffb8"/>
+  </g>
+
+  <!-- Text at bottom -->
+  <text x="250" y="450" font-family="Arial, sans-serif" font-size="80" text-anchor="middle" fill="#00f7ff" font-weight="bold">PlayVault</text>
+</svg>
