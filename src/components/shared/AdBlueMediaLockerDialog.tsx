@@ -86,19 +86,22 @@ export function AdBlueMediaLockerDialog({
       if (!containerRef.current) return;
 
       try {
+        // Modify the iframe setup to adapt to content size
         const iframe = document.createElement('iframe');
         iframe.src = `https://locked-content.com/?${ADBLUE_CAMPAIGN_ID}`;
-        iframe.width = '100%';
-        iframe.height = '100%';
         iframe.style.border = 'none';
         iframe.style.overflow = 'hidden';
         iframe.style.scrollbar = 'none';
         iframe.style.msOverflowStyle = 'none';
         iframe.style.scrollbarWidth = 'none';
         iframe.allow = 'clipboard-write';
-        iframe.style.height = "100%";
+        iframe.style.minWidth = "320px"; // Minimum width
         iframe.style.width = "100%";
+        iframe.style.minHeight = "400px"; // Minimum height
+        iframe.style.height = "auto"; // Auto height based on content
         iframe.style.display = "block";
+        iframe.setAttribute('scrolling', 'no');
+        iframe.setAttribute('frameborder', '0');
 
         iframe.onload = () => {
           console.log('Iframe loaded successfully');
@@ -110,6 +113,13 @@ export function AdBlueMediaLockerDialog({
           setLoadError('Failed to load offers. Please try again later.');
           setIsLoading(false);
         };
+
+        // Add message event handler for resizing based on content height
+        window.addEventListener('message', function(e) {
+          if (e.data && typeof e.data === 'object' && e.data.height) {
+            iframe.style.height = `${e.data.height}px`;
+          }
+        });
 
         containerRef.current.appendChild(iframe);
       } catch (error) {
@@ -131,19 +141,22 @@ export function AdBlueMediaLockerDialog({
     if (containerRef.current) {
       containerRef.current.innerHTML = '';
 
+      // Modify the iframe setup to adapt to content size
       const iframe = document.createElement('iframe');
       iframe.src = `https://locked-content.com/?${ADBLUE_CAMPAIGN_ID}`;
-      iframe.width = '100%';
-      iframe.height = '100%';
       iframe.style.border = 'none';
       iframe.style.overflow = 'hidden';
       iframe.style.scrollbar = 'none';
       iframe.style.msOverflowStyle = 'none';
       iframe.style.scrollbarWidth = 'none';
       iframe.allow = 'clipboard-write';
-      iframe.style.height = "100%";
+      iframe.style.minWidth = "320px"; // Minimum width
       iframe.style.width = "100%";
+      iframe.style.minHeight = "400px"; // Minimum height
+      iframe.style.height = "auto"; // Auto height based on content
       iframe.style.display = "block";
+      iframe.setAttribute('scrolling', 'no');
+      iframe.setAttribute('frameborder', '0');
 
       iframe.onload = () => {
         console.log('Retry: Iframe loaded successfully');
@@ -155,6 +168,13 @@ export function AdBlueMediaLockerDialog({
         setLoadError('Failed to load offers even after retry. Please try again later.');
         setIsLoading(false);
       };
+
+      // Add message event handler for resizing based on content height
+      window.addEventListener('message', function(e) {
+        if (e.data && typeof e.data === 'object' && e.data.height) {
+          iframe.style.height = `${e.data.height}px`;
+        }
+      });
 
       containerRef.current.appendChild(iframe);
     }
@@ -172,7 +192,7 @@ export function AdBlueMediaLockerDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[70vw] max-w-none mx-auto my-[10px] h-[calc(100vh-20px)] flex flex-col p-0">
+      <DialogContent className="w-[70vw] max-w-[800px] mx-auto my-[10px] flex flex-col p-0">
         <div className="sr-only">
           <DialogTitle>{title}</DialogTitle>
         </div>
@@ -180,7 +200,7 @@ export function AdBlueMediaLockerDialog({
           <div
             ref={containerRef}
             id="adblue-locker-container"
-            className="w-full h-full flex-1 flex flex-col items-center justify-center"
+            className="w-full flex flex-col items-center justify-center py-4"
           >
             {isLoading && (
               <div className="text-center p-4">
