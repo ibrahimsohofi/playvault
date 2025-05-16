@@ -6,6 +6,7 @@ import { ResourceLibrary } from './components/resources/ResourceLibrary';
 import { Testimonials } from './components/home/Testimonials';
 import { HowItWorks } from './components/home/HowItWorks';
 import { Faq } from './components/home/Faq';
+import { ProtectionCheck } from './components/shared/ProtectionCheck';
 
 import { GameDetailPage } from './pages/GameDetailPage';
 import { GameCategoriesPage } from './pages/GameCategoriesPage';
@@ -55,6 +56,7 @@ export function App() {
   return (
     <WishlistProvider>
       <BrowserRouter>
+        <ProtectionCheck />
         <AppRoutes />
       </BrowserRouter>
     </WishlistProvider>
