@@ -11,8 +11,10 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1 w-full flex flex-col">
-        {children}
+      <main className="flex-1 w-full flex flex-col ">
+      
+          {children}
+        
       </main>
       <Footer />
       <MobileBottomNav />

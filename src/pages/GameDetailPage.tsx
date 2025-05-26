@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { GAME_RESOURCES } from "../data/games";
 import { AdBlueMediaLockerDialog } from "../components/shared/AdBlueMediaLockerDialog";
+import { ErrorDialog } from "../components/shared/ErrorDialog";
 import { getRedirectUrl } from "@/data/lockerConfig";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -133,6 +134,33 @@ export function GameDetailPage() {
   const navigate = useNavigate();
   const [verifying, setVerifying] = useState(false);
   const [showLocker, setShowLocker] = useState(false);
+  const [adBlockerDetected, setAdBlockerDetected] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+
+  // Cleanup effect to prevent state resets
+  useEffect(() => {
+    return () => {
+      setShowLocker(false);
+      setShowError(false);
+      setAdBlockerDetected(false);
+    };
+  }, []);
+
+  // Effect to handle ad blocker detection
+  useEffect(() => {
+    if (adBlockerDetected) {
+      setShowError(true);
+    }
+  }, [adBlockerDetected]);
+
+  // Effect to handle locker state
+  useEffect(() => {
+    if (!showLocker) {
+      // Reset error state when locker is closed
+      setShowError(false);
+    }
+  }, [showLocker]);
   const [activeTab, setActiveTab] = useState("details");
   const [currentScreenshot, setCurrentScreenshot] = useState(0);
   const [userReviews, setUserReviews] = useState<UserReview[]>([]);
@@ -151,6 +179,20 @@ export function GameDetailPage() {
       navigate("/not-found");
     }
   }, [game, gameId, navigate]);
+
+  // Handle verification complete
+  const handleVerificationComplete = () => {
+    setVerifying(false);
+    
+    // Check if content is already unlocked or locker was already shown
+    const isUnlocked = localStorage.getItem(`unlocked_${game?.id}`) === 'true';
+    const lockerShown = localStorage.getItem(`locker_shown_${game?.id}`) === 'true';
+    
+    // Only show locker if content is not unlocked and locker wasn't shown before
+    if (!isUnlocked && !lockerShown) {
+      setShowLocker(true);
+    }
+  };
 
   // Load user reviews from localStorage
   useEffect(() => {
@@ -276,13 +318,8 @@ export function GameDetailPage() {
     setVerifying(true);
   };
 
-  // When verification completes, show locker and hide verifying
-  const handleVerificationComplete = () => {
-    setVerifying(false);
-    setShowLocker(true);
-  };
 
-  return (
+  return(
     <>
       <SEOMetadata
         title={`${game.title} | PlayVault`}
@@ -308,24 +345,37 @@ export function GameDetailPage() {
       />
       <AdBlueMediaLockerDialog
         isOpen={showLocker}
-        onClose={() => setShowLocker(false)}
+        onClose={(adBlockerActive: boolean) => {
+          setShowLocker(false);
+          if (adBlockerActive) {
+            setAdBlockerDetected(true);
+            setShowError(true);
+          }
+        }}
         title={`Unlock ${game.title}`}
         description="Complete an offer to download this game and get immediate access."
         contentId={game.id}
         redirectUrl={getRedirectUrl(game.id)}
       />
-
+      <ErrorDialog
+        isOpen={showError}
+        onClose={() => {
+          setShowError(false);
+          setAdBlockerDetected(false);
+        }}
+        message="Ad blocker detected. Please disable your ad blocker to access this content."
+      />
       <div className="container-custom py-12">
         {/* Back button */}
-        <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-[#00f7ff] mb-6">
+        <Link to="/" className="inline-flex items-center  text-muted-foreground hover:text-[#00f7ff] my-6">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to All Games
         </Link>
 
-        {/* Game header */}
-        <div className="flex flex-col lg:flex-row gap-8 mb-10">
-          {/* Game image */}
-          <div className="lg:w-1/3">
+        {/* Game header - enhanced for better mobile experience */}
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-8 mb-6 md:mb-10">
+          {/* Game image - improved responsive sizing */}
+          <div className="w-full lg:w-1/3  mx-auto lg:mx-0">
             <div className="relative overflow-hidden rounded-lg shadow-[0_0_30px_rgba(0,247,255,0.2)] border border-[#00f7ff]/20">
               <img
                 src={game.image}
@@ -413,8 +463,8 @@ export function GameDetailPage() {
           <div className="lg:w-2/3">
             <div className="flex items-center gap-4 mb-4">
               <img
-                src={game.image}
-                alt={game.title}
+                src={game.logo}
+                alt={game.title+" logo"}
                 className="w-16 h-16 md:w-24 md:h-24 rounded-full shadow border border-[#00f7ff]/40 bg-background object-cover"
               />
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_5px_#00f7ff55]">{game.title}</h1>

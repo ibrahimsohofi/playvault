@@ -15,7 +15,43 @@ interface VerificationDialogProps {
   onClose: () => void;
 }
 
-export function VerificationDialog({ isOpen, onComplete, onClose }: VerificationDialogProps) {
+export function VerificationDialog({
+  isOpen,
+  onClose,
+  onComplete,
+}: VerificationDialogProps) {
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Simulate verification process
+      setProgress(0);
+      setVerificationError(null);
+      setIsVerified(false);
+      
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setIsVerified(true);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isVerified) {
+      onComplete();
+      onClose();
+    }
+  }, [isVerified, onComplete, onClose]);
+
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -42,18 +78,28 @@ export function VerificationDialog({ isOpen, onComplete, onClose }: Verification
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-sm text-center p-6">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 justify-center text-xl font-bold mb-2">
-            <BadgeCheck className="h-6 w-6 text-[#00f7ff] animate-pulse" /> Verifying...
+            {isVerified ? (
+              <BadgeCheck className="h-6 w-6 text-green-500" />
+            ) : (
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            )}
+            {isVerified ? 'Verification Complete' : 'Verifying Request'}
           </DialogTitle>
-          <DialogDescription>Verify you are human</DialogDescription>
+          <DialogDescription>
+            {isVerified ? (
+              'Your request has been successfully verified. You can now proceed to download.'
+            ) : verificationError ? (
+              verificationError
+            ) : (
+              'Please wait while we verify your request...'
+            )}
+          </DialogDescription>
         </DialogHeader>
-        <div className="my-5 flex flex-col items-center">
-          <Progress value={progress} className="h-6 w-full mb-2" />
-          <div className="text-muted-foreground tracking-wide">
-            {progress}%
-          </div>
+        <div className="flex justify-center">
+          <Progress value={progress} className="w-full mt-4" />
         </div>
       </DialogContent>
     </Dialog>

@@ -5,6 +5,7 @@ export interface GameResource {
   category: string;
   description: string;
   image: string;
+  logo:string,
   rating: number;
   unlocks: number;
   featured?: boolean;

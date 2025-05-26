@@ -1,5 +1,5 @@
 {
-  "name": "gaming-content-locker-react",
+  "name": "playvault",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,7 +8,10 @@
     "build": "vite build",
     "lint": "bunx biome lint --write && bunx tsc --noEmit",
     "format": "bunx biome format --write",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -39,31 +42,36 @@
     "@radix-ui/react-toggle": "^1.1.1",
     "@radix-ui/react-toggle-group": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.6",
+    "@types/react-router-dom": "^5.3.3",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.5.2",
     "input-otp": "^1.4.2",
     "next-themes": "^0.4.4",
-    "react": "^18.2.0",
+    "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
-    "react-dom": "^18.2.0",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.56.1",
     "react-resizable-panels": "^2.1.7",
-    "react-router-dom": "^6.22.3",
+    "react-router-dom": "^6.30.0",
     "recharts": "^2.15.0",
     "sonner": "^1.7.2",
     "vaul": "^1.1.2",
     "zod": "^3.24.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
     "@biomejs/biome": "1.9.4",
+    "@eslint/js": "^9.18.0",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.2.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/node": "^22.10.7",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
+    "@types/react": "^18.3.21",
+    "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@typescript-eslint/parser": "^8.20.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^1.2.1",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -75,6 +83,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.18",
     "globals": "^15.14.0",
+    "jsdom": "^24.0.0",
     "lucide-react": "^0.471.2",
     "postcss": "^8.5.1",
     "prettier": "^3.4.2",
@@ -84,6 +93,7 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.20.0",
-    "vite": "^5.0.12"
+    "vite": "^5.0.12",
+    "vitest": "^1.2.1"
   }
 }

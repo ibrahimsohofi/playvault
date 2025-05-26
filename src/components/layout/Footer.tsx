@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Gamepad2, Facebook, Twitter, Instagram, Youtube, Mail, ArrowRight } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube,  ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 function ScrollLink({ to, children, className }: { to: string; children: React.ReactNode; className?: string }) {
   const navigate = useNavigate();
   const location = useLocation();
+  
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -43,11 +44,11 @@ function ScrollLink({ to, children, className }: { to: string; children: React.R
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-
+const SOCIAL_MEDIA_ACCOUNT="playvault.app"
   return (
-    <footer className="border-t border-[#00f7ff]/10 pt-16 pb-8 mt-20">
+    <footer className="border-t border-[#00f7ff]/10 pt-10 pb-6 mt-20">
       <div className="container-custom">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           {/* Column 1 - Logo and about */}
           <div className="col-span-full sm:col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center mb-4">
@@ -57,21 +58,20 @@ export function Footer() {
               Your ultimate destination for mobile gaming. Discover top-rated games, stay updated with latest releases, and level up your mobile gaming experience.
             </p>
             <div className="flex space-x-3">
-              <a href="https://facebook.com" className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
-                <Facebook className="h-5 w-5" />
+              <a href={`https://facebook.com/${SOCIAL_MEDIA_ACCOUNT}`} className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
+                <Facebook className="h-6 w-6" />
               </a>
-              <a href="https://twitter.com" className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
-                <Twitter className="h-5 w-5" />
+              <a href={`https://twitter.com/${SOCIAL_MEDIA_ACCOUNT}` }className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
+                <Twitter className="h-6 w-6" />
               </a>
-              <a href="https://instagram.com" className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
-                <Instagram className="h-5 w-5" />
+              <a href={`https://instagram.com/${SOCIAL_MEDIA_ACCOUNT}`} className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
+                <Instagram className="h-6 w-6" />
               </a>
-              <a href="https://youtube.com" className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
-                <Youtube className="h-5 w-5" />
+              <a href={`https://youtube.com/${SOCIAL_MEDIA_ACCOUNT}` }className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
+                <Youtube className="h-6 w-6" />
               </a>
             </div>
           </div>
-
           {/* Column 2 - Categories */}
           <div>
             <h3 className="font-semibold text-lg mb-4">Categories</h3>
@@ -169,8 +169,10 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="pt-8 mt-8 border-t border-[#00f7ff]/10 text-center text-muted-foreground text-sm">
-          <p>© {currentYear} PlayVault. All rights reserved.</p>
+        <div className="pt-6 mt-6 border-t border-[#00f7ff]/10 text-center text-muted-foreground text-sm">
+          <p>© {currentYear} <a href="https://playvault.app/" className="text-muted-foreground hover:text-[#00f7ff] transition-colors">
+                PlayVault
+              </a> . All rights reserved.</p>
         </div>
       </div>
     </footer>

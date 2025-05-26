@@ -16,18 +16,18 @@ export const ADBLUE_CAMPAIGN_ID = "cee9bbd";
 // This allows us to use a single locker but have different download URLs per game
 // In a production app, these URLs would point to your actual game files
 export const DOWNLOAD_URLS: Record<string, string> = {
-  "clash-of-clans": "https://dl.example.com/games/clash-of-clans.apk",
-  "free-fire": "https://dl.example.com/games/free-fire.apk",
-  "clash-royale": "https://dl.example.com/games/clash-royale.apk",
-  "candy-crush": "https://dl.example.com/games/candy-crush.apk",
-  "pubg-mobile": "https://dl.example.com/games/pubg-mobile.apk",
-  "pokemon-go": "https://dl.example.com/games/pokemon-go.apk",
-  "subway-surfers": "https://dl.example.com/games/subway-surfers.apk",
-  "genshin-impact": "https://dl.example.com/games/genshin-impact.apk",
-  "roblox": "https://dl.example.com/games/roblox.apk",
-  "among-us": "https://dl.example.com/games/among-us.apk",
-  "minecraft": "https://dl.example.com/games/minecraft.apk",
-  "baseball-9": "https://dl.example.com/games/baseball-9.apk"
+  "clash-of-clans": "https://cdn.playvault.com/downloads/clash-of-clans-v14.93.6.apk",
+  "free-fire": "https://cdn.playvault.com/downloads/free-fire-v1.92.1.apk",
+  "clash-royale": "https://cdn.playvault.com/downloads/clash-royale-v3.3021.apk",
+  "candy-crush": "https://cdn.playvault.com/downloads/candy-crush-v1.210.0.3.apk",
+  "pubg-mobile": "https://cdn.playvault.com/downloads/pubg-mobile-v2.7.0.apk",
+  "pokemon-go": "https://cdn.playvault.com/downloads/pokemon-go-v0.259.0.apk",
+  "subway-surfers": "https://cdn.playvault.com/downloads/subway-surfers-v2.36.0.apk",
+  "genshin-impact": "https://cdn.playvault.com/downloads/genshin-impact-v4.0.1.apk",
+  "roblox": "https://cdn.playvault.com/downloads/roblox-v2.573.589.apk",
+  "among-us": "https://cdn.playvault.com/downloads/among-us-v2023.6.13.apk",
+  "minecraft": "https://cdn.playvault.com/downloads/minecraft-v1.20.0.apk",
+  "baseball-9": "https://cdn.playvault.com/downloads/baseball-9-v1.9.7.apk"
 };
 
 // Helper function to get the download URL for a specific game
@@ -43,8 +43,8 @@ export function getRedirectUrl(gameId: string): string {
   const isProduction = window.location.hostname !== 'localhost';
 
   if (isProduction) {
-    // For production (Vercel deployment)
-    return `https://gamevault-six.vercel.app/?game=${encodeURIComponent(gameId)}`;
+    // For production deployment
+    return `https://playvault.com/download-handler?game=${encodeURIComponent(gameId)}`;
   } else {
     // For local development
     return `/download-handler?gameId=${encodeURIComponent(gameId)}`;

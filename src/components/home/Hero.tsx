@@ -32,7 +32,7 @@ export function Hero() {
       <SEOMetadata
         title="PlayVault - Download Premium Mobile Games | Play Android & iOS Best Titles"
         description="Your ultimate library for the best mobile gaming experience on Android and iOS. Discover, download, and play top-rated mobile games with PlayVault. No limits, no waiting."
-        image="/images/logos/new/logo-full.png"
+        image="/playvault-logo-new.svg"
         url={typeof window !== "undefined" ? window.location.origin : ""}
         type="website"
         keywords={[
@@ -87,7 +87,7 @@ export function Hero() {
                 url={typeof window !== "undefined" ? window.location.origin : ""}
                 title="Download Premium Mobile Games on PlayVault"
                 description="Your ultimate library for the best mobile gaming experience. Discover, download, and play top-rated games."
-                image="/images/logos/new/logo-full.png"
+                image="/playvault-logo-new.svg"
                 compact
                 className="mb-8 mt-4"
               />

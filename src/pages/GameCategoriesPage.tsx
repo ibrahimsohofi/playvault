@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { GameImage } from "@/components/shared/GameImage";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -475,10 +476,12 @@ function GameCard({ game }: { game: GameResource }) {
   return (
     <Card className="overflow-hidden border-[#00f7ff]/20 bg-card/70 backdrop-blur-sm card-hover group transition-all duration-300 h-full flex flex-col">
       <div className="relative h-40 overflow-hidden">
-        <img
+        <GameImage
           src={game.image}
           alt={game.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          width={300}
+          height={200}
         />
         {game.featured && (
           <Badge className="absolute top-2 left-2 bg-[#00f7ff] text-primary-foreground">

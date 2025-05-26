@@ -367,7 +367,7 @@ function ResourceCard({ resource, onDownloadClick, onGameClick }: ResourceCardPr
         <CardContent className="p-6">
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-2">
-              <img src={resource.image} alt={resource.title} className="w-8 h-8 rounded shadow border border-[#00f7ff]/50 bg-background object-cover" />
+              <img src={resource.logo} alt={resource.title+"logo"} className="w-10 h-10 rounded-lg shadow border border-[#00f7ff]/50 bg-background object-contain " />
               <h3 className="truncate max-w-[65vw] text-base sm:text-xl font-bold group-hover:text-[#00f7ff] transition-colors">{resource.title}</h3>
             </div>
             <div className="flex items-center">

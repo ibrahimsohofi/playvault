@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation, useParams } from 'react-rout
 import { Layout } from './components/layout/Layout';
 import { Hero } from './components/home/Hero';
 import { ResourceLibrary } from './components/resources/ResourceLibrary';
+import AdminPage from './pages/AdminPage';
 import { Testimonials } from './components/home/Testimonials';
 import { HowItWorks } from './components/home/HowItWorks';
 import { Faq } from './components/home/Faq';
@@ -17,6 +18,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { WishlistProvider } from './context/WishlistContext';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import { FaqPage } from './pages/FaqPage';
 
 // HomePage component that includes all the current sections
 const HomePage = () => (
@@ -79,6 +81,8 @@ function AppRoutes() {
           <Route path="/download-handler" element={<DownloadHandlerPage />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Layout>
