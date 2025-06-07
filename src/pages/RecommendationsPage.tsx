@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import GameRatingDisplay from '@/components/shared/GameRatingDisplay';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Star, ArrowLeft, Download, Heart, Gamepad2 } from "lucide-react";
+import { Star, ArrowLeft, Download, Heart, Gamepad2, Loader2 } from "lucide-react";
 import {
   getPersonalizedRecommendations,
   getTrendingGames,
@@ -15,9 +15,13 @@ import {
 import type { GameResource } from "@/types/games";
 import { useWishlist } from "@/context/WishlistContext";
 import { GAME_RESOURCES } from "@/data/games";
-import { getRedirectUrl } from "@/data/lockerConfig";
+import { getAdBlueMediaConfig } from "@/data/lockerConfig";
 import { SEOMetadata } from '@/components/shared/SEOMetadata';
 import { LazyGameImage } from "@/components/shared/LazyGameImage";
+import { VerificationDialog } from "@/components/shared/VerificationDialog";
+import { ErrorDialog } from "@/components/shared/ErrorDialog";
+import { detectAdBlocker } from "@/utils/detection";
+import { DynamicAdBlueMediaLocker } from "@/components/shared/DynamicAdBlueMediaLocker";
 
 export function RecommendationsPage() {
   const [activeTab, setActiveTab] = useState("for-you");
@@ -29,6 +33,31 @@ export function RecommendationsPage() {
   const [showLocker, setShowLocker] = useState(false);
   const [selectedResource, setSelectedResource] = useState<GameResource | null>(null);
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const [verifying, setVerifying] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [adBlockerDetected, setAdBlockerDetected] = useState(false);
+
+  // Reset all states when component mounts
+  useEffect(() => {
+    console.log('RecommendationsPage mounted - resetting states');
+    setVerifying(false);
+    setShowError(false);
+    setAdBlockerDetected(false);
+    setSelectedResource(null);
+    setShowLocker(false);
+  }, []);
+
+  // Cleanup states when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('RecommendationsPage unmounting - cleaning up states');
+      setVerifying(false);
+      setShowError(false);
+      setAdBlockerDetected(false);
+      setSelectedResource(null);
+      setShowLocker(false);
+    };
+  }, []);
 
   // Load recommendations based on the active tab and user categories
   const loadRecommendations = useCallback(() => {
@@ -83,9 +112,69 @@ export function RecommendationsPage() {
     loadRecommendations();
   }, [loadRecommendations]);
 
-  const handleDownloadClick = (game: GameResource) => {
-    setSelectedResource(game);
-    setShowLocker(true);
+  const handleVerificationComplete = async (success: boolean) => {
+    console.log('Verification complete:', success);
+    if (success && selectedResource) {  // Only proceed if we have a selected resource
+      // Double check for ad blocker before showing locker
+      const adBlockerResult = await detectAdBlocker();
+      console.log('Final ad blocker check:', adBlockerResult);
+      
+      if (adBlockerResult) {
+        console.log('Ad blocker detected after verification');
+        setAdBlockerDetected(true);
+        setShowError(true);
+        setShowLocker(false);
+      } else {
+        console.log('Showing locker for:', selectedResource.title);
+        setShowLocker(true);
+      }
+    } else {
+      console.log('Verification failed or no resource selected');
+      setShowError(true);
+      setShowLocker(false);
+    }
+    setVerifying(false);
+  };
+
+  const handleDownloadClick = async (game: GameResource) => {
+    console.log('Download button clicked for:', game.title);
+    
+    // Prevent multiple clicks during verification or when locker is open
+    if (verifying || showLocker) {
+      console.log('Download blocked - already verifying or locker open');
+      return;
+    }
+
+    try {
+      // Reset all states before starting verification
+      console.log('Resetting states...');
+      setShowError(false);
+      setAdBlockerDetected(false);
+      setShowLocker(false);
+      setSelectedResource(game);
+
+      // Start verification immediately
+      console.log('Starting verification process...');
+      setVerifying(true);
+
+      // Check for ad blocker in parallel
+      const adBlockerResult = await detectAdBlocker();
+      console.log('Ad blocker check result:', adBlockerResult);
+      
+      if (adBlockerResult) {
+        console.log('Ad blocker detected - stopping verification');
+        setAdBlockerDetected(true);
+        setShowError(true);
+        setVerifying(false);
+        setSelectedResource(null);  // Clear selected resource
+        return;
+      }
+    } catch (error) {
+      console.error('Error in download click handler:', error);
+      setShowError(true);
+      setVerifying(false);
+      setSelectedResource(null);  // Clear selected resource
+    }
   };
 
   const handleWishlistToggle = (gameId: string) => {
@@ -97,110 +186,91 @@ export function RecommendationsPage() {
   };
 
   return (
-    <div className="container-custom py-16">
+    <div className="container py-8 space-y-8">
       <SEOMetadata
-        title="Personalized Game Recommendations | Discover Games You'll Love"
-        description="Discover games tailored for you based on your interests, gameplay history, and wishlist. Find trending games, new releases, and personalized recommendations."
-        canonical="/recommendations"
-        type="website"
-        keywords={["game recommendations", "personalized games", "trending games", "new releases", "game suggestions"]}
+        title="Game Recommendations - PlayVault"
+        description="Discover personalized game recommendations based on your preferences and play history."
       />
-      <div className="mb-8">
-        <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-[#00f7ff] mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
-        </Link>
+      <div className="container-custom py-16">
+        <div className="mb-8">
+          <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-[#00f7ff] mb-6">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Link>
 
-        <h1 className="text-3xl md:text-4xl font-bold">Game Recommendations</h1>
-        <p className="text-muted-foreground mt-2">
-          Discover new games tailored to your interests and preferences
-        </p>
-      </div>
+          <h1 className="text-3xl md:text-4xl font-bold">Game Recommendations</h1>
+          <p className="text-muted-foreground mt-2">
+            Discover new games tailored to your interests and preferences
+          </p>
+        </div>
 
-      <Tabs defaultValue="for-you" value={activeTab} onValueChange={setActiveTab} className="mb-10">
-        <TabsList className="grid grid-cols-3 max-w-md mx-auto mb-6">
-          <TabsTrigger
-            value="for-you"
-            className="data-[state=active]:bg-[#00f7ff] data-[state=active]:text-primary-foreground"
-          >
-            For You
-          </TabsTrigger>
-          <TabsTrigger
-            value="trending"
-            className="data-[state=active]:bg-[#00f7ff] data-[state=active]:text-primary-foreground"
-          >
-            Trending
-          </TabsTrigger>
-          <TabsTrigger
-            value="new"
-            className="data-[state=active]:bg-[#00f7ff] data-[state=active]:text-primary-foreground"
-          >
-            New Releases
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="for-you" value={activeTab} onValueChange={setActiveTab} className="mb-10">
+          <TabsList className="grid grid-cols-3 max-w-md mx-auto mb-6">
+            <TabsTrigger
+              value="for-you"
+              className="data-[state=active]:bg-[#00f7ff] data-[state=active]:text-primary-foreground"
+            >
+              For You
+            </TabsTrigger>
+            <TabsTrigger
+              value="trending"
+              className="data-[state=active]:bg-[#00f7ff] data-[state=active]:text-primary-foreground"
+            >
+              Trending
+            </TabsTrigger>
+            <TabsTrigger
+              value="new"
+              className="data-[state=active]:bg-[#00f7ff] data-[state=active]:text-primary-foreground"
+            >
+              New Releases
+            </TabsTrigger>
+          </TabsList>
 
-        {/* For You Tab */}
-        <TabsContent value="for-you" className="space-y-8">
-          {personalizedGames.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {personalizedGames.map(game => (
-                  <GameCard
-                    key={game.id}
-                    game={game}
-                    onDownload={() => handleDownloadClick(game)}
-                    onWishlistToggle={() => handleWishlistToggle(game.id)}
-                    isInWishlist={isInWishlist(game.id)}
-                    view="grid"
+          {/* For You Tab */}
+          <TabsContent value="for-you" className="space-y-8">
+            {personalizedGames.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {personalizedGames.map(game => (
+                    <GameCard
+                      key={game.id}
+                      game={game}
+                      onDownload={() => handleDownloadClick(game)}
+                      onWishlistToggle={() => handleWishlistToggle(game.id)}
+                      isInWishlist={isInWishlist(game.id)}
+                      view="grid"
+                    />
+                  ))}
+                </div>
+
+                {/* Show category recommendations */}
+                {userCategories.map(category => (
+                  <CategorySection
+                    key={category}
+                    category={category}
+                    games={categoryRecommendations[category] || []}
+                    onDownload={handleDownloadClick}
+                    onWishlistToggle={handleWishlistToggle}
+                    isInWishlist={isInWishlist}
                   />
                 ))}
+              </>
+            ) : (
+              <div className="text-center py-12 border border-dashed border-[#00f7ff]/20 rounded-lg">
+                <p className="text-muted-foreground mb-4">
+                  No personalized recommendations yet. Download or wishlist a few games to get started!
+                </p>
+                <Link to="/categories">
+                  <Button className="btn-primary">Browse Categories</Button>
+                </Link>
               </div>
+            )}
+          </TabsContent>
 
-              {/* Show category recommendations */}
-              {userCategories.map(category => (
-                <CategorySection
-                  key={category}
-                  category={category}
-                  games={categoryRecommendations[category] || []}
-                  onDownload={handleDownloadClick}
-                  onWishlistToggle={handleWishlistToggle}
-                  isInWishlist={isInWishlist}
-                />
-              ))}
-            </>
-          ) : (
-            <div className="text-center py-12 border border-dashed border-[#00f7ff]/20 rounded-lg">
-              <p className="text-muted-foreground mb-4">
-                No personalized recommendations yet. Download or wishlist a few games to get started!
-              </p>
-              <Link to="/categories">
-                <Button className="btn-primary">Browse Categories</Button>
-              </Link>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Trending Tab */}
-        <TabsContent value="trending" className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trendingGames.map(game => (
-              <GameCard
-                key={game.id}
-                game={game}
-                onDownload={() => handleDownloadClick(game)}
-                onWishlistToggle={() => handleWishlistToggle(game.id)}
-                isInWishlist={isInWishlist(game.id)}
-                view="grid"
-              />
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* New Releases Tab */}
-        <TabsContent value="new" className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newReleases.length > 0 ? (
-              newReleases.map(game => (
+          {/* Trending Tab */}
+          <TabsContent value="trending" className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {trendingGames.map(game => (
                 <GameCard
                   key={game.id}
                   game={game}
@@ -209,31 +279,88 @@ export function RecommendationsPage() {
                   isInWishlist={isInWishlist(game.id)}
                   view="grid"
                 />
-              ))
-            ) : (
-              <div className="col-span-4 text-center py-8">
-                <p className="text-muted-foreground">No new releases available right now. Check back later!</p>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* New Releases Tab */}
+          <TabsContent value="new" className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {newReleases.length > 0 ? (
+                newReleases.map(game => (
+                  <GameCard
+                    key={game.id}
+                    game={game}
+                    onDownload={() => handleDownloadClick(game)}
+                    onWishlistToggle={() => handleWishlistToggle(game.id)}
+                    isInWishlist={isInWishlist(game.id)}
+                    view="grid"
+                  />
+                ))
+              ) : (
+                <div className="col-span-4 text-center py-8">
+                  <p className="text-muted-foreground">No new releases available right now. Check back later!</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Only render dialogs if we have a selected resource */}
+        {selectedResource && (
+          <>
+            {/* Verification Dialog */}
+            <VerificationDialog
+              isOpen={verifying}
+              onClose={() => {
+                console.log('Verification dialog closed');
+                setVerifying(false);
+                setSelectedResource(null);
+              }}
+              onComplete={handleVerificationComplete}
+            />
+
+            {/* Error Dialog */}
+            <ErrorDialog
+              isOpen={showError}
+              onClose={() => {
+                console.log('Error dialog closed');
+                setShowError(false);
+                setAdBlockerDetected(false);
+                setSelectedResource(null);
+              }}
+              message={
+                adBlockerDetected
+                  ? "Please disable your ad blocker to continue. This helps us maintain our services and provide free downloads."
+                  : "An error occurred while processing your request. Please try again."
+              }
+            />
+
+            {/* Locker - only render if explicitly shown */}
+            {showLocker && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+                <div className="relative w-full max-w-lg mx-auto">
+                  <DynamicAdBlueMediaLocker
+                    isOpen={true}
+                    onClose={(adBlockerActive: boolean) => {
+                      console.log('Locker closed, adBlockerActive:', adBlockerActive);
+                      if (adBlockerActive) {
+                        setAdBlockerDetected(true);
+                        setShowError(true);
+                      }
+                      setShowLocker(false);
+                      setSelectedResource(null);
+                    }}
+                    title="Complete Offer to Download"
+                    description="Please complete a quick offer to download this game. This helps us keep the service free."
+                    gameId={selectedResource.id}
+                  />
+                </div>
               </div>
             )}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Show the locker directly instead of in a dialog */}
-      {showLocker && selectedResource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="relative w-full max-w-lg mx-auto">
-            {/* Locker component removed */}
-            <Button
-              variant="ghost"
-              className="absolute top-2 right-2 text-white"
-              onClick={() => setShowLocker(false)}
-            >
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -251,6 +378,18 @@ interface GameCardProps {
 
 function GameCard({ game, onDownload, onWishlistToggle, isInWishlist, view = "grid" }: GameCardProps) {
   const isUnlocked = localStorage.getItem(`unlocked_${game.id}`) === 'true';
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleDownloadClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVerifying(true);
+    try {
+      await onDownload();
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   if (view === "list") {
     return (
@@ -289,11 +428,27 @@ function GameCard({ game, onDownload, onWishlistToggle, isInWishlist, view = "gr
                 />
               </Button>
               <Button
-                onClick={onDownload}
+                onClick={handleDownloadClick}
                 size="sm"
                 className="bg-[#00f7ff] hover:bg-[#00d4dd] text-primary-foreground"
+                disabled={isVerifying}
               >
-                {isUnlocked ? "Download" : "Play"}
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : isUnlocked ? (
+                  <>
+                    <Gamepad2 className="mr-1 h-4 w-4" />
+                    Play
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-1 h-4 w-4" />
+                    Download
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -368,10 +523,16 @@ function GameCard({ game, onDownload, onWishlistToggle, isInWishlist, view = "gr
         <div className="flex gap-2">
           <Button
             className={`flex-1 ${isUnlocked ? 'bg-green-600 hover:bg-green-700' : 'btn-primary'}`}
-            onClick={onDownload}
+            onClick={handleDownloadClick}
+            disabled={isVerifying}
             size="sm"
           >
-            {isUnlocked ? (
+            {isVerifying ? (
+              <>
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                Verifying...
+              </>
+            ) : isUnlocked ? (
               <>
                 <Gamepad2 className="mr-1 h-4 w-4" />
                 Play

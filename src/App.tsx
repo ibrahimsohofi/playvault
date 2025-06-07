@@ -4,6 +4,7 @@ import { Layout } from './components/layout/Layout';
 import { ThemeProvider } from './context/ThemeContext';
 import { DialogProvider } from "@/context/DialogContext";
 import { GlobalDialogManager } from './components/layout/GlobalDialogManager';
+import { ProtectionCheck } from './components/shared/ProtectionCheck';
 
 // Lazy load page components for better code splitting
 const AdminPage = lazy(() => import('./pages/AdminPage'));
@@ -12,16 +13,12 @@ const GamesPage = lazy(() => import('./pages/GamesPage'));
 const GameCategoriesPage = lazy(() => import('./pages/GameCategoriesPage'));
 const WishlistPage = lazy(() => import('./pages/WishlistPage'));
 const RecommendationsPage = lazy(() => import('./pages/RecommendationsPage'));
-const DownloadHandlerPage = lazy(() => import('./pages/DownloadHandlerPage'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const FaqPage = lazy(() => import('./pages/FaqPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Lazy load shared components
-const LazyProtectionCheck = lazy(() => import('./components/shared/ProtectionCheck').then(module => ({ default: module.ProtectionCheck })));
-
-// Lazy load HomePage components
 const LazyHero = lazy(() => import('./components/home/Hero').then(module => ({ default: module.Hero })));
 const LazyResourceLibrary = lazy(() => import('./components/resources/ResourceLibrary').then(module => ({ default: module.ResourceLibrary })));
 const LazyHowItWorks = lazy(() => import('./components/home/HowItWorks').then(module => ({ default: module.HowItWorks })));
@@ -71,9 +68,7 @@ function App() {
       <ThemeProvider>
         <BrowserRouter>
           <ScrollToTopOnNavigation />
-          <Suspense fallback={null}>
-            <LazyProtectionCheck />
-          </Suspense>
+          <ProtectionCheck />
           <GlobalDialogManager />
           <Layout>
             <Suspense fallback={<PageLoader />}>
@@ -85,7 +80,6 @@ function App() {
                 <Route path="/categories" element={<GameCategoriesPage />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
                 <Route path="/recommendations" element={<RecommendationsPage />} />
-                <Route path="/download/:gameId" element={<DownloadHandlerPage />} />
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />

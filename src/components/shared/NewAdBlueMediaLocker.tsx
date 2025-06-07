@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Unlock, X, AlertCircle, Loader2 } from "lucide-react";
-import { getCampaignId, getDownloadUrl } from "@/data/lockerConfig";
+import { getCampaignId } from "@/data/lockerConfig";
 
 // Extend window to include AdBlueMedia functions
 declare global {
@@ -90,10 +90,6 @@ export function NewAdBlueMediaLocker({
   useEffect(() => {
     if (isOpen && contentUnlocked) {
       onClose();
-      const downloadUrl = getDownloadUrl(gameId);
-      if (downloadUrl) {
-        window.location.href = downloadUrl;
-      }
     }
   }, [isOpen, contentUnlocked, gameId, onClose]);
 

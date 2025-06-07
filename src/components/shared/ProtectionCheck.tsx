@@ -1,81 +1,62 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Shield, ShieldOff } from "lucide-react";
 import { useDialogContext } from "@/context/DialogContext";
+import { detectAdBlocker } from "@/utils/detection";
 
 export function ProtectionCheck() {
-  const [showWarning, setShowWarning] = useState(false);
-  const [detectedIssues, setDetectedIssues] = useState<{
-    vpn: boolean;
-    adblock: boolean;
-  }>({
-    vpn: false,
-    adblock: false,
-  });
-  const { queueDialog, currentDialog, closeDialog } = useDialogContext();
+  const { queueDialog, closeDialog } = useDialogContext();
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
-    // Check for VPN using WebRTC leak detection
-    const checkVPN = async () => {
+    const checkProtection = async () => {
+      if (hasChecked) return;
+
       try {
-        const pc = new RTCPeerConnection({
-          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-        });
-
-        pc.onicecandidate = (e) => {
-          if (e.candidate) {
-            // Check if the IP address is from a known VPN range
-            const ipAddress = e.candidate.address;
-            const isVPN = /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.)/.test(
-              ipAddress || ""
-            );
-            if (isVPN) {
-              setDetectedIssues((prev) => ({ ...prev, vpn: true }));
-              setShowWarning(true);
-              // Show VPN dialog at top priority (0)
-              queueDialog({
-                type: 'vpn',
-                props: {
-                  onClose: closeDialog
-                },
-                priority: 0,
-              });
-            }
-          }
-        };
-
-        // Create offer to generate candidates
-        await pc.createOffer();
-        pc.close();
+        console.log('Running initial protection check...');
+        const adBlockerResult = await detectAdBlocker();
+        console.log('Initial ad blocker check result:', adBlockerResult);
+        
+        if (adBlockerResult) {
+          console.log('Ad blocker detected during initial check - showing dialog');
+          // Queue adblock dialog with priority 1
+          queueDialog({
+            type: 'adblock',
+            props: {
+              onClose: () => {
+                console.log('Ad blocker dialog closed');
+                closeDialog();
+                // Store that user has seen the warning with timestamp
+                localStorage.setItem('adblock_warning_shown', Date.now().toString());
+              }
+            },
+            priority: 1,
+          });
+        } else {
+          console.log('No ad blocker detected during initial check');
+          // Clear any existing warning timestamp since no ad blocker is detected
+          localStorage.removeItem('adblock_warning_shown');
+        }
       } catch (error) {
-        console.error("VPN check failed:", error);
+        console.error('Protection check failed:', error);
+      } finally {
+        setHasChecked(true);
       }
     };
 
-    // Check for adblocker
-    const checkAdBlocker = () => {
-      const testAd = document.createElement("div");
-      testAd.innerHTML = "&nbsp;";
-      testAd.className = "adsbox";
-      document.body.appendChild(testAd);
+    // Run the check immediately on mount
+    checkProtection();
 
-      window.setTimeout(() => {
-        if (testAd.offsetHeight === 0) {
-          setDetectedIssues((prev) => ({ ...prev, adblock: true }));
-          setShowWarning(true);
-          // Optionally, queue (lower-priority) adblock dialog here
-          // queueDialog({ type: 'adblock', priority: 2 });
-        }
-        testAd.remove();
-      }, 100);
+    // Set up an interval to periodically check for ad blocker
+    const checkInterval = setInterval(() => {
+      if (!hasChecked) {
+        checkProtection();
+      }
+    }, 5000); // Check every 5 seconds until we get a result
+
+    return () => {
+      clearInterval(checkInterval);
     };
+  }, [hasChecked, queueDialog, closeDialog]);
 
-    checkVPN();
-    checkAdBlocker();
-  }, [queueDialog, closeDialog]);
-
-  // The VPN dialog will now be rendered by a top-level Dialog manager.
-
+  // This component doesn't render anything
   return null;
 }

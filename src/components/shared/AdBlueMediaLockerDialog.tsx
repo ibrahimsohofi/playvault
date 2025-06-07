@@ -13,8 +13,7 @@ type AdBlueMediaLockerDialogProps = {
   onClose: (adBlockerActive?: boolean) => void;
   title: string;
   description: string;
-  contentId: string;
-  redirectUrl: string; // URL for AdBlueMedia to redirect to after completion
+  gameId: string;
 };
 
 export function AdBlueMediaLockerDialog({
@@ -22,35 +21,28 @@ export function AdBlueMediaLockerDialog({
   onClose,
   title,
   description,
-  contentId,
-  redirectUrl,
+  gameId,
 }: AdBlueMediaLockerDialogProps) {
-  console.log('AdBlueMediaLockerDialog props:', { isOpen, contentUnlocked: localStorage.getItem(`unlocked_${contentId}`) === 'true' });
-
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [showTestBypass, setShowTestBypass] = useState(false);
+  const [scriptsLoaded, setScriptsLoaded] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
+  const configRef = useRef<AdBlueMediaConfig | null>(null);
 
   // Maximum retry attempts
   const MAX_RETRIES = 3;
 
-  // Check if content is already unlocked in localStorage
-  const contentUnlocked = localStorage.getItem(`unlocked_${contentId}`) === 'true';
-
-  // Testing bypass - check for dev environment or testing mode
-  const isTestingMode = window.location.hostname === 'localhost' ||
-                       window.location.hostname === '127.0.0.1' ||
-                       localStorage.getItem('adblue_testing_mode') === 'true';
+  // Check if content is already unlocked
+  const contentUnlocked = localStorage.getItem(`unlocked_${gameId}`) === 'true';
 
   // Reset states when dialog opens
   useEffect(() => {
     if (isOpen) {
       setRetryCount(0);
       setLoadError(null);
-      setShowTestBypass(false);
+      setScriptsLoaded(false);
     }
   }, [isOpen]);
 
@@ -110,20 +102,11 @@ export function AdBlueMediaLockerDialog({
     }
   }, []);
 
-  // Testing bypass function
-  const handleTestBypass = useCallback(() => {
-    console.log('Test bypass activated for demo purposes');
-    localStorage.setItem(`unlocked_${contentId}`, 'true');
-    localStorage.setItem('adblue_testing_mode', 'true');
-    onClose();
-    window.location.href = redirectUrl;
-  }, [contentId, onClose, redirectUrl]);
-
   // Initialize the AdBlueMedia locker
   const initializeLocker = useCallback(() => {
     if (!containerRef.current) return;
 
-    console.log('Initializing AdBlueMedia locker for:', contentId);
+    console.log('Initializing AdBlueMedia locker for:', gameId);
 
     // Clear previous content
     containerRef.current.innerHTML = '';
@@ -131,7 +114,8 @@ export function AdBlueMediaLockerDialog({
     setLoadError(null);
 
     // Get the configuration for this game
-    const config = getAdBlueMediaConfig(contentId);
+    const config = getAdBlueMediaConfig(gameId);
+    configRef.current = config;
 
     try {
       // For demo purposes, we'll simulate the locker loading process
@@ -236,7 +220,7 @@ export function AdBlueMediaLockerDialog({
           // After loading, show either the offers or test bypass
           setTimeout(() => {
             if (isTestingMode) {
-              setShowTestBypass(true);
+              setScriptsLoaded(true);
             } else {
               // In a real implementation, this would show actual AdBlueMedia offers
               setLoadError('Demo Mode: In production, real CPA offers would appear here. Use the demo bypass button for testing.');
@@ -264,7 +248,7 @@ export function AdBlueMediaLockerDialog({
         if (!isTestingMode) {
           setLoadError('Offers took too long to load. This might be due to network issues or ad blockers.');
         }
-        setShowTestBypass(true);
+        setScriptsLoaded(true);
       }, 10000);
 
     } catch (error) {
@@ -272,7 +256,7 @@ export function AdBlueMediaLockerDialog({
       setLoadError('Failed to initialize content locker. Please try again.');
       setIsLoading(false);
     }
-  }, [contentId, title, isTestingMode, handleTestBypass]);
+  }, [gameId, title, isTestingMode, handleTestBypass]);
 
   // Check ad blocker and initialize locker when dialog opens
   useEffect(() => {
@@ -296,7 +280,7 @@ export function AdBlueMediaLockerDialog({
         'Need help? Check our FAQ for detailed instructions on disabling common ad blockers.'
       );
       setIsLoading(false);
-      setShowTestBypass(true);
+      setScriptsLoaded(true);
     } else {
       // Initialize the locker
       setTimeout(initializeLocker, 100);
@@ -315,14 +299,14 @@ export function AdBlueMediaLockerDialog({
   const handleRetry = () => {
     if (retryCount >= MAX_RETRIES) {
       setLoadError('Maximum retry attempts reached. Please try again later or contact support.');
-      setShowTestBypass(true);
+      setScriptsLoaded(true);
       return;
     }
 
     setRetryCount(prev => prev + 1);
     setIsLoading(true);
     setLoadError(null);
-    setShowTestBypass(false);
+    setScriptsLoaded(false);
 
     setTimeout(initializeLocker, 500);
   };
@@ -342,9 +326,23 @@ export function AdBlueMediaLockerDialog({
     onClose(checkAdBlocker());
   };
 
+  // Testing bypass function
+  const handleTestBypass = useCallback(() => {
+    console.log('Test bypass activated for demo purposes');
+    localStorage.setItem(`unlocked_${gameId}`, 'true');
+    localStorage.setItem('adblue_testing_mode', 'true');
+    onClose();
+    window.location.href = redirectUrl;
+  }, [gameId, onClose, redirectUrl]);
+
+  // Testing mode
+  const isTestingMode = window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       localStorage.getItem('adblue_testing_mode') === 'true';
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-auto">
+      <DialogContent className="sm:max-w-md w-[95vw]">
         <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
           <Unlock className="w-5 h-5 text-cyan-400" />
           Unlock {title}
@@ -388,41 +386,72 @@ export function AdBlueMediaLockerDialog({
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-            {/* Retry Button */}
-            {loadError && retryCount < MAX_RETRIES && (
-              <Button
-                onClick={handleRetry}
-                variant="outline"
-                size="sm"
-                className="flex-1"
-              >
-                Retry ({MAX_RETRIES - retryCount} attempts left)
-              </Button>
-            )}
+          {!isLoading && !loadError && scriptsLoaded && (
+            <div className="flex flex-col items-center justify-center h-full p-6 min-h-[200px]">
+              <div className="text-center mb-6">
+                <div className="mb-4">
+                  <Unlock className="h-16 w-16 text-primary mx-auto" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Ready to Unlock</h3>
+                <p className="text-muted-foreground mb-4">
+                  Click the button below to open the offer and unlock this game.
+                </p>
+                <p className="text-xs text-muted-foreground/70">
+                  Complete the offer in the new window to get access to the download.
+                </p>
+              </div>
 
-            {/* Test Bypass Button for Demo */}
-            {(showTestBypass || isTestingMode) && (
-              <Button
-                onClick={handleTestBypass}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                size="sm"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                {isTestingMode ? 'Demo Download' : 'Test Access'}
-              </Button>
-            )}
+              <div className="flex flex-col gap-3 w-full max-w-md">
+                <Button
+                  variant="default"
+                  onClick={openLocker}
+                  className="w-full text-lg py-6"
+                  disabled={isLoading || !scriptsLoaded}
+                >
+                  <Unlock className="h-5 w-5 mr-2" />
+                  {isLoading ? 'Loading...' : 'Open Offer'}
+                </Button>
 
-            {/* Close Button */}
-            <Button
-              onClick={handleClose}
-              variant="ghost"
-              size="sm"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+                {/* Add status indicator */}
+                <div className="text-xs text-muted-foreground text-center">
+                  {isLoading && "Loading offer system..."}
+                  {!isLoading && !scriptsLoaded && "Offer system not ready"}
+                  {!isLoading && scriptsLoaded && "Ready to open offer"}
+                  {loadError && <span className="text-red-400">Error: {loadError}</span>}
+                </div>
+
+                {/* Fallback option if offer system fails */}
+                {loadError && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      // Try to open the offer manually using direct URL approach
+                      const config = configRef.current;
+                      if (config) {
+                        const fallbackUrl = `https://trafasn.com/cpa/adb-media-form?campaign=${config.key}&redirect=${encodeURIComponent(window.location.origin + '/games/' + gameId)}`;
+                        window.open(fallbackUrl, '_blank', 'width=800,height=600');
+                      } else {
+                        // Final fallback - go to game detail page
+                        window.location.href = `/games/${gameId}`;
+                      }
+                    }}
+                    className="w-full text-sm"
+                  >
+                    Try Alternative Method
+                  </Button>
+                )}
+
+                <Button
+                  variant="ghost"
+                  onClick={handleClose}
+                  className="w-full text-muted-foreground"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Help Text */}
           <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">

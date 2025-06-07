@@ -30,11 +30,13 @@ import {
   Send,
   Sparkles,
   Heart,
-  Gamepad2
+  Gamepad2,
+  Loader2
 } from "lucide-react";
 import { VerificationDialog } from "@/components/shared/VerificationDialog";
 import { SEOMetadata } from '@/components/shared/SEOMetadata';
 import { SocialShare } from '@/components/shared/SocialShare';
+import { detectAdBlocker } from "@/utils/detection";
 
 // Fallback screenshots for games with missing screenshots
 const DEFAULT_SCREENSHOTS = [
@@ -136,6 +138,7 @@ export function GameDetailPageContent() {
   const [adBlockerDetected, setAdBlockerDetected] = useState(false);
   const [showError, setShowError] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [hasStartedVerification, setHasStartedVerification] = useState(false);
 
   // Cleanup effect to prevent state resets
   useEffect(() => {
@@ -143,23 +146,34 @@ export function GameDetailPageContent() {
       setShowLocker(false);
       setShowError(false);
       setAdBlockerDetected(false);
+      setHasStartedVerification(false);
     };
   }, []);
 
+  // Effect to handle verification state - only show locker if verification was started
+  useEffect(() => {
+    console.log('verifying changed:', verifying, 'showError:', showError, 'adBlockerDetected:', adBlockerDetected, 'hasStartedVerification:', hasStartedVerification);
+    
+    // Only show locker if verification was started AND is complete AND no errors AND no ad blocker
+    if (hasStartedVerification && !verifying && !showError && !adBlockerDetected) {
+      console.log('All checks passed - showing locker');
+      setShowLocker(true);
+    } else {
+      console.log('Not showing locker - verifying:', verifying, 'showError:', showError, 'adBlockerDetected:', adBlockerDetected, 'hasStartedVerification:', hasStartedVerification);
+      setShowLocker(false);
+    }
+  }, [verifying, showError, adBlockerDetected, hasStartedVerification]);
+
   // Effect to handle ad blocker detection
   useEffect(() => {
+    console.log('adBlockerDetected changed:', adBlockerDetected);
     if (adBlockerDetected) {
+      console.log('Ad blocker detected - showing error dialog and hiding locker');
       setShowError(true);
+      setShowLocker(false);
     }
   }, [adBlockerDetected]);
 
-  // Effect to handle locker state
-  useEffect(() => {
-    if (!showLocker) {
-      // Reset error state when locker is closed
-      setShowError(false);
-    }
-  }, [showLocker]);
   const [activeTab, setActiveTab] = useState("details");
   const [currentScreenshot, setCurrentScreenshot] = useState(0);
   const [userReviews, setUserReviews] = useState<UserReview[]>([]);
@@ -180,23 +194,71 @@ export function GameDetailPageContent() {
   }, [game, gameId, navigate]);
 
   // Handle verification complete with proper state sequencing
-  const handleVerificationComplete = () => {
-    // Add slight delay to ensure verification dialog closes properly
-    setTimeout(() => {
-      setVerifying(false);
+  const handleVerificationComplete = async (hasVPN: boolean, hasAdBlocker: boolean) => {
+    console.log('Verification complete - hasVPN:', hasVPN, 'hasAdBlocker:', hasAdBlocker);
+    
+    // Double check ad blocker status
+    const adBlockerResult = await detectAdBlocker();
+    console.log('Double check ad blocker result:', adBlockerResult);
+    
+    // Set states in the correct order
+    if (hasVPN || hasAdBlocker || adBlockerResult) {
+      console.log('Security check failed - showing error dialog');
+      setAdBlockerDetected(true); // Set this first
+      setShowError(true); // Then show error
+      setShowLocker(false); // Ensure locker is hidden
+      setHasStartedVerification(false); // Reset verification state
+    } else {
+      console.log('Security check passed - showing locker');
+      setAdBlockerDetected(false); // Ensure ad blocker state is false
+      setShowError(false); // Ensure error state is false
+      // Don't set showLocker here - let the effect handle it
+    }
+    
+    // Set verifying to false last to trigger the effect
+    setVerifying(false);
+  };
 
-      // Check if content is already unlocked or locker was already shown
-      const isUnlocked = localStorage.getItem(`unlocked_${game?.id}`) === 'true';
-      const lockerShown = localStorage.getItem(`locker_shown_${game?.id}`) === 'true';
+  // Download button handler with state guards
+  const handleDownloadClick = async () => {
+    console.log('Download button clicked - starting process');
+    
+    // Prevent multiple clicks during verification or when locker is open
+    if (verifying || showLocker) {
+      console.log('Download blocked - already verifying or locker open');
+      return;
+    }
 
-      // Only show locker if content is not unlocked and locker wasn't shown before
-      if (!isUnlocked && !lockerShown) {
-        // Add another small delay to ensure clean state transition
-        setTimeout(() => {
-          setShowLocker(true);
-        }, 100);
+    try {
+      // Reset all states before starting verification
+      console.log('Resetting states...');
+      setShowError(false);
+      setAdBlockerDetected(false);
+      setShowLocker(false);
+      setHasStartedVerification(true);  // Mark that verification has started
+
+      // Start verification immediately
+      console.log('Starting verification process...');
+      setVerifying(true);
+
+      // Check for ad blocker in parallel
+      const adBlockerResult = await detectAdBlocker();
+      console.log('Ad blocker check result:', adBlockerResult);
+      
+      if (adBlockerResult) {
+        console.log('Ad blocker detected - stopping verification');
+        setAdBlockerDetected(true);
+        setShowError(true);
+        setVerifying(false);
+        setHasStartedVerification(false);  // Reset verification state
+        return;
       }
-    }, 200);
+    } catch (error) {
+      console.error('Error in download click handler:', error);
+      setShowError(true);
+      setVerifying(false);
+      setHasStartedVerification(false);  // Reset verification state
+    }
   };
 
   // Load user reviews from localStorage
@@ -318,21 +380,6 @@ export function GameDetailPageContent() {
     // eslint-disable-next-line
   }, [currentScreenshot, screenshots]);
 
-  // Download button handler with state guards
-  const handleDownloadClick = () => {
-    // Prevent multiple clicks during verification or when locker is open
-    if (verifying || showLocker) {
-      return;
-    }
-
-    // Reset any error states before starting verification
-    setShowError(false);
-    setAdBlockerDetected(false);
-
-    setVerifying(true);
-  };
-
-
   return(
     <>
       <SEOMetadata
@@ -354,40 +401,41 @@ export function GameDetailPageContent() {
 
       <VerificationDialog
         isOpen={verifying}
-        onComplete={handleVerificationComplete}
         onClose={() => {
-          // Prevent premature closing if verification is still in progress
-          if (!verifying) return;
+          console.log('Verification dialog closed');
           setVerifying(false);
         }}
-      />
-      <DynamicAdBlueMediaLocker
-        isOpen={showLocker}
-        onClose={(adBlockerActive?: boolean) => {
-          setShowLocker(false);
-
-          // Mark that locker was shown to prevent showing again
-          if (game?.id) {
-            localStorage.setItem(`locker_shown_${game.id}`, 'true');
-          }
-
-          if (adBlockerActive) {
-            setAdBlockerDetected(true);
-            setShowError(true);
-          }
-        }}
-        title={`Unlock ${game.title}`}
-        description="Complete an offer to download this game and get immediate access."
-        gameId={game.id}
+        onComplete={handleVerificationComplete}
       />
       <ErrorDialog
         isOpen={showError}
         onClose={() => {
+          console.log('Error dialog closed');
           setShowError(false);
           setAdBlockerDetected(false);
         }}
-        message="Ad blocker detected. Please disable your ad blocker to access this content."
+        message={
+          adBlockerDetected
+            ? "Please disable your ad blocker to continue. This helps us maintain our services and provide free downloads."
+            : "An error occurred while processing your request. Please try again."
+        }
       />
+      {!adBlockerDetected && !showError && (
+        <DynamicAdBlueMediaLocker
+          isOpen={showLocker}
+          onClose={(adBlockerActive) => {
+            console.log('Locker closed, adBlockerActive:', adBlockerActive);
+            if (adBlockerActive) {
+              setAdBlockerDetected(true);
+              setShowError(true);
+            }
+            setShowLocker(false);
+          }}
+          title="Complete Offer to Download"
+          description="Please complete a quick offer to download this game. This helps us keep the service free."
+          gameId={gameId || ''}
+        />
+      )}
       <div className="container-custom py-12">
         {/* Back button */}
         <Link to="/" className="inline-flex items-center  text-muted-foreground hover:text-[#00f7ff] my-6">
@@ -528,9 +576,21 @@ export function GameDetailPageContent() {
                   size="lg"
                   className="px-6 py-6 text-lg btn-primary shine-effect"
                   onClick={handleDownloadClick}
+                  disabled={verifying || showLocker}
                 >
-                  <FileDown className="mr-2 h-5 w-5" />
-                  DOWNLOAD GAME
+                  {verifying ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : showLocker ? (
+                    "Opening Offer..."
+                  ) : (
+                    <>
+                      <FileDown className="mr-2 h-5 w-5" />
+                      DOWNLOAD GAME
+                    </>
+                  )}
                 </Button>
 
                 <Button

@@ -1,85 +1,114 @@
 import { useEffect, useState } from 'react';
 
-// Main VPN detection function using multiple techniques
-export const detectVPN = async (): Promise<{ isVPN: boolean; confidence: number; reason?: string }> => {
-  const results = {
-    isVPN: false,
-    confidence: 0,
-    reason: ''
-  };
-
+// Helper function to check WebRTC leaks
+async function checkWebRTCLeak(): Promise<boolean> {
   try {
-    // Method 1: WebRTC Leak
-    const webrtcResults = await checkWebRTCLeak();
-    if (webrtcResults.isSuspicious) {
-      return {
-        isVPN: true,
-        confidence: webrtcResults.confidence,
-        reason: webrtcResults.reason
-      };
-    }
+    const pc = new RTCPeerConnection();
+    const dataChannel = pc.createDataChannel("");
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
 
-    // Method 2: High Response Time
-    const responseTime = await measureResponseTime();
-    if (responseTime > 500) {
-      return {
-        isVPN: true,
-        confidence: 60,
-        reason: 'High network latency detected (common with VPNs)'
-      };
-    }
+    // Check if we have any private IPs in the ICE candidates
+    const sdp = pc.localDescription?.sdp || "";
+    const hasPrivateIP = sdp.includes("192.168.") ||
+                        sdp.includes("10.") ||
+                        sdp.includes("172.16.") ||
+                        sdp.includes("172.17.") ||
+                        sdp.includes("172.18.") ||
+                        sdp.includes("172.19.") ||
+                        sdp.includes("172.20.") ||
+                        sdp.includes("172.21.") ||
+                        sdp.includes("172.22.") ||
+                        sdp.includes("172.23.") ||
+                        sdp.includes("172.24.") ||
+                        sdp.includes("172.25.") ||
+                        sdp.includes("172.26.") ||
+                        sdp.includes("172.27.") ||
+                        sdp.includes("172.28.") ||
+                        sdp.includes("172.29.") ||
+                        sdp.includes("172.30.") ||
+                        sdp.includes("172.31.");
 
-    // Method 3: VPN Extensions
-    if (detectVPNExtensions()) {
-      return {
-        isVPN: true,
-        confidence: 80,
-        reason: 'VPN browser extension detected'
-      };
-    }
+    pc.close();
+    return hasPrivateIP;
+  } catch (err) {
+    console.error("Error checking WebRTC leak:", err);
+    return false;
+  }
+}
 
-    // Method 4: IP Reputation via external API
-    const response = await fetch('https://vpn-detection-api.playvault.com/check', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'API-Key': process.env.REACT_APP_VPN_API_KEY || ''
-      },
-      body: JSON.stringify({
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        platform: navigator.platform,
-        screenResolution: `${window.screen.width}x${window.screen.height}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        webRTC: true
-      })
+// Check for common VPN extensions
+function checkVPNExtensions(): boolean {
+  const extensions = [
+    "chrome-extension://jpnepfccgohjnfjfkmjfdljfkjfmkjf",
+    "chrome-extension://jpnepfccgohjnfjfkmjfdljfkjfmkjf",
+    "chrome-extension://jpnepfccgohjnfjfkmjfdljfkjfmkjf",
+    "chrome-extension://jpnepfccgohjnfjfkmjfdljfkjfmkjf",
+    "chrome-extension://jpnepfccgohjnfjfkmjfdljfkjfmkjf",
+  ];
+
+  return extensions.some(ext => {
+    try {
+      const img = new Image();
+      img.src = ext + "/icon.png";
+      return img.complete;
+    } catch {
+      return false;
+    }
+  });
+}
+
+// Main VPN detection function
+export async function detectVPN(): Promise<{ isVPN: boolean; confidence: number; reason?: string }> {
+  try {
+    console.log("Starting VPN detection...");
+    const results: { method: string; detected: boolean; reason?: string }[] = [];
+
+    // Check WebRTC leaks
+    const hasWebRTCLeak = await checkWebRTCLeak();
+    results.push({
+      method: "WebRTC",
+      detected: hasWebRTCLeak,
+      reason: hasWebRTCLeak ? "WebRTC leak detected" : undefined
     });
 
-    if (!response.ok) {
-      const fallback = await performLocalVPNChecks();
-      return fallback ? {
-        isVPN: true,
-        confidence: 50,
-        reason: 'Fallback checks indicate VPN usage'
-      } : results;
-    }
+    // Check for VPN extensions
+    const hasVPNExtension = checkVPNExtensions();
+    results.push({
+      method: "Extensions",
+      detected: hasVPNExtension,
+      reason: hasVPNExtension ? "VPN extension detected" : undefined
+    });
 
-    const data = await response.json();
+    // Calculate confidence based on number of detection methods
+    const detectedMethods = results.filter(r => r.detected);
+    const confidence = detectedMethods.length / results.length;
+    const isVPN = confidence > 0.5;
+
+    // Get the first detection reason if any
+    const reason = detectedMethods[0]?.reason;
+
+    console.log("VPN detection results:", {
+      results,
+      confidence,
+      isVPN,
+      reason
+    });
+
     return {
-      isVPN: data.isVPN,
-      confidence: data.confidence || 70,
-      reason: data.reason || 'Flagged by VPN detection API'
+      isVPN,
+      confidence,
+      reason
     };
-  } catch (error) {
-    console.error('Error detecting VPN:', error);
-    const fallback = await performLocalVPNChecks();
-    return fallback ? {
-      isVPN: true,
-      confidence: 50,
-      reason: 'Error in detection, fallback triggered'
-    } : results;
+  } catch (err) {
+    console.error("Error detecting VPN:", err);
+    return {
+      isVPN: false,
+      confidence: 0,
+      reason: "Error during detection"
+    };
   }
-};
+}
 
 // Fallback local VPN checks
 async function performLocalVPNChecks(): Promise<boolean> {
@@ -96,48 +125,6 @@ async function performLocalVPNChecks(): Promise<boolean> {
   } catch (error) {
     console.error('Error in local VPN checks:', error);
     return false;
-  }
-}
-
-// Check for WebRTC IP leak
-async function checkWebRTCLeak(): Promise<{ isSuspicious: boolean; confidence: number; reason?: string }> {
-  try {
-    const pc = new RTCPeerConnection({ iceServers: [] });
-    const localIPs: string[] = [];
-
-    pc.createDataChannel('');
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    const candidates = await new Promise<string[]>((resolve) => {
-      const ips: string[] = [];
-      pc.onicecandidate = (e) => {
-        if (!e.candidate) {
-          resolve(ips);
-          return;
-        }
-        const match = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate);
-        if (match?.[1]) {
-          ips.push(match[1]);
-        }
-      };
-    });
-
-    const response = await fetch('https://api.ipify.org?format=json');
-    const { ip: publicIP } = await response.json();
-
-    if (candidates.includes(publicIP)) {
-      return {
-        isSuspicious: true,
-        confidence: 90,
-        reason: 'WebRTC leak matches public IP (possible VPN)'
-      };
-    }
-
-    return { isSuspicious: false, confidence: 0 };
-  } catch (error) {
-    console.error('WebRTC detection error:', error);
-    return { isSuspicious: false, confidence: 0 };
   }
 }
 
@@ -217,70 +204,143 @@ const detectVPNExtensions = (): boolean => {
 };
 
 // AdBlocker detection
-export const detectAdBlocker = (): boolean => {
-  const testDiv = document.createElement('div');
-  testDiv.innerHTML = `
-    <div class="adsbox"></div>
-    <div class="advertising"></div>
-    <div class="banner"></div>
-    <div class="ad"></div>
-    <div id="carbonads"></div>
-    <div class="adsbygoogle"></div>
-  `;
-  testDiv.style.position = 'absolute';
-  testDiv.style.opacity = '0';
-  testDiv.style.pointerEvents = 'none';
-  document.body.appendChild(testDiv);
-
-  const elementsBlocked = !testDiv.querySelector('.adsbox') ||
-    !testDiv.querySelector('.advertising') ||
-    !testDiv.querySelector('.banner') ||
-    !testDiv.querySelector('.ad') ||
-    !testDiv.querySelector('#carbonads') ||
-    !testDiv.querySelector('.adsbygoogle');
-
-  testDiv.remove();
-
-  const adScriptBlocked = checkAdScriptBlocking();
-  const adBlockerExtensions = checkAdBlockerExtensions();
-
-  return elementsBlocked || adScriptBlocked || adBlockerExtensions;
-};
-
-const checkAdScriptBlocking = (): boolean => {
-  const script = document.createElement('script');
-  script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
-  script.async = true;
-  script.id = 'ad-test-script';
-
-  let scriptBlocked = false;
-  script.onerror = () => {
-    scriptBlocked = true;
-    script.remove();
+export const detectAdBlocker = async (): Promise<boolean> => {
+  console.log('Starting ad blocker detection...');
+  
+  // Method 1: Test ad element creation and modification
+  const testAdElement = () => {
+    const testDiv = document.createElement('div');
+    testDiv.innerHTML = '&nbsp;';
+    testDiv.className = 'adsbox ad-unit advertisement';
+    testDiv.style.cssText = `
+      position: absolute !important;
+      left: -9999px !important;
+      top: -9999px !important;
+      width: 1px !important;
+      height: 1px !important;
+      visibility: hidden !important;
+      display: block !important;
+    `;
+    document.body.appendChild(testDiv);
+    
+    // Wait a short moment for ad blockers to potentially act
+    return new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        // Check if element was modified or removed
+        const isBlocked = testDiv.offsetHeight === 0 || 
+                         testDiv.offsetWidth === 0 || 
+                         testDiv.offsetParent === null ||
+                         testDiv.style.display === 'none' ||
+                         testDiv.style.visibility === 'hidden' ||
+                         !document.body.contains(testDiv);
+        
+        // Cleanup
+        try {
+          if (testDiv.parentNode) {
+            testDiv.parentNode.removeChild(testDiv);
+          }
+        } catch (e) {
+          console.warn('Failed to remove test element:', e);
+        }
+        
+        resolve(isBlocked);
+      }, 100); // Short delay to let ad blockers process
+    });
   };
 
-  document.head.appendChild(script);
+  // Method 2: Test ad script loading
+  const testAdScript = async () => {
+    try {
+      const script = document.createElement('script');
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+      script.async = true;
+      
+      const loadPromise = new Promise<boolean>((resolve) => {
+        script.onload = () => {
+          console.log('Ad script loaded successfully');
+          resolve(false); // Script loaded successfully
+        };
+        script.onerror = () => {
+          console.log('Ad script failed to load');
+          resolve(true); // Script failed to load
+        };
+        // Timeout after 2 seconds
+        setTimeout(() => {
+          console.log('Ad script load timed out');
+          resolve(true);
+        }, 2000);
+      });
+      
+      document.head.appendChild(script);
+      const isBlocked = await loadPromise;
+      
+      // Cleanup
+      try {
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+      } catch (e) {
+        console.warn('Failed to remove test script:', e);
+      }
+      
+      return isBlocked;
+    } catch (e) {
+      console.warn('Ad script test failed:', e);
+      return false;
+    }
+  };
 
-  setTimeout(() => {
-    document.getElementById('ad-test-script')?.remove();
-  }, 1000);
+  // Method 3: Check for common ad blocker extensions
+  const checkAdBlockerExtensions = () => {
+    // Only check for actual ad blocker extensions, not just any selectors
+    const extensionKeys = [
+      'adblockDetect',
+      'blockAdBlock',
+      'fuckAdBlock',
+      'abp',
+      'uBlock',
+      'adblock',
+      'adBlocker',
+      'adblockEnabled'
+    ];
 
-  return scriptBlocked;
-};
+    // Check if any ad blocker extension is present
+    const hasExtension = extensionKeys.some(key => {
+      const value = (window as Record<string, unknown>)[key];
+      return value !== undefined && value !== null;
+    });
+    
+    return hasExtension;
+  };
 
-const checkAdBlockerExtensions = (): boolean => {
-  const selectors = [
-    '#adblock-notice',
-    '#adblock-detector',
-    '.adblock-warning',
-    '#ab-detection',
-    '.adblocker-message',
-    'html.ublock',
-    '#abp-detector'
-  ];
+  try {
+    // Run all detection methods
+    const [elementBlocked, scriptBlocked, hasExtension] = await Promise.all([
+      testAdElement(),
+      testAdScript(),
+      Promise.resolve(checkAdBlockerExtensions())
+    ]);
 
-  return selectors.some(selector => document.querySelector(selector)) ||
-    ['adblockDetect', 'blockAdBlock', 'fuckAdBlock', 'abp'].some(key => (window as Record<string, unknown>)[key] !== undefined);
+    // Log results for debugging
+    console.log('Ad blocker detection results:', {
+      elementBlocked,
+      scriptBlocked,
+      hasExtension
+    });
+
+    // Require at least two positive results to confirm ad blocker
+    // This reduces false positives
+    const positiveResults = [elementBlocked, scriptBlocked, hasExtension].filter(Boolean).length;
+    const isAdBlockerDetected = positiveResults >= 2;
+    
+    console.log('Final ad blocker detection result:', isAdBlockerDetected, 'with', positiveResults, 'positive results');
+    
+    return isAdBlockerDetected;
+  } catch (error) {
+    console.error('Error during ad blocker detection:', error);
+    // If detection fails, assume no ad blocker to avoid false positives
+    return false;
+  }
 };
 
 // Custom hook to use VPN detection
@@ -303,8 +363,27 @@ export const useAdBlockerDetection = (): boolean => {
   const [isAdBlocker, setIsAdBlocker] = useState(false);
 
   useEffect(() => {
-    const result = detectAdBlocker();
-    setIsAdBlocker(result);
+    let mounted = true;
+
+    const checkAdBlocker = async () => {
+      try {
+        const result = await detectAdBlocker();
+        if (mounted) {
+          setIsAdBlocker(result);
+        }
+      } catch (error) {
+        console.error('Error in useAdBlockerDetection:', error);
+        if (mounted) {
+          setIsAdBlocker(false);
+        }
+      }
+    };
+
+    checkAdBlocker();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return isAdBlocker;

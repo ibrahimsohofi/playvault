@@ -24,18 +24,31 @@ export function GlobalDialogManager() {
               <p className="font-semibold mb-2">VPN or proxy detected</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Our service does not work with VPN or proxy connections enabled.</li>
+                {currentDialog.props?.reason && (
+                  <li className="text-sm mt-2">Detection reason: {currentDialog.props.reason}</li>
+                )}
               </ul>
             </div>
             <p className="text-sm text-muted-foreground">
               Please disable your VPN or proxy and refresh the page to continue.
+              If you believe this is a false detection, please contact support.
             </p>
-            <Button
-              className="w-full btn-primary"
-              onClick={() => window.location.reload()}
-              autoFocus
-            >
-              Refresh Page
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                className="flex-1 btn-primary"
+                onClick={() => window.location.reload()}
+                autoFocus
+              >
+                Refresh Page
+              </Button>
+              <Button
+                className="flex-1 btn-secondary"
+                onClick={closeDialog}
+                variant="outline"
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
