@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALORANT Mobile AdBlueMedia Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>VALORANT Mobile AdBlueMedia Integration Test</h1>
+    <div id="status" class="status warning">Initializing test...</div>
+    
+    <h3>Configuration Test:</h3>
+    <div id="config-status"></div>
+    
+    <h3>Script Loading Test:</h3>
+    <div id="script-status"></div>
+    
+    <h3>Function Test:</h3>
+    <div id="function-status"></div>
+    
+    <button onclick="testLockerTrigger()">Test Locker Trigger</button>
+    <div id="trigger-status"></div>
+
+    <script>
+        // AdBlueMedia configuration (matching the real app)
+        window.RnBWE_GjX_DURZcc = {
+            it: 4503226,
+            key: "af8d5"
+        };
+
+        // Test configuration
+        function testConfiguration() {
+            const configStatus = document.getElementById('config-status');
+            if (window.RnBWE_GjX_DURZcc && 
+                window.RnBWE_GjX_DURZcc.it === 4503226 && 
+                window.RnBWE_GjX_DURZcc.key === "af8d5") {
+                configStatus.innerHTML = '<div class="status success">✅ Configuration loaded correctly: it=4503226, key="af8d5"</div>';
+                return true;
+            } else {
+                configStatus.innerHTML = '<div class="status error">❌ Configuration not found or incorrect</div>';
+                return false;
+            }
+        }
+
+        // Test script loading
+        function testScriptLoading() {
+            const scriptStatus = document.getElementById('script-status');
+            const script = document.createElement('script');
+            script.src = 'https://dfmpe7igjx4jo.cloudfront.net/40bb691.js';
+            script.onload = function() {
+                scriptStatus.innerHTML = '<div class="status success">✅ AdBlueMedia script loaded successfully</div>';
+                testFunction();
+            };
+            script.onerror = function() {
+                scriptStatus.innerHTML = '<div class="status error">❌ Failed to load AdBlueMedia script</div>';
+            };
+            document.head.appendChild(script);
+        }
+
+        // Test function availability
+        function testFunction() {
+            const functionStatus = document.getElementById('function-status');
+            setTimeout(() => {
+                if (typeof window._iH === 'function') {
+                    functionStatus.innerHTML = '<div class="status success">✅ Function _iH is available and ready</div>';
+                } else {
+                    functionStatus.innerHTML = '<div class="status error">❌ Function _iH not found. Available functions: ' + 
+                        Object.getOwnPropertyNames(window).filter(prop => prop.startsWith('_')).join(', ') + '</div>';
+                }
+            }, 1000);
+        }
+
+        // Test locker trigger
+        function testLockerTrigger() {
+            const triggerStatus = document.getElementById('trigger-status');
+            
+            if (typeof window._iH !== 'function') {
+                triggerStatus.innerHTML = '<div class="status error">❌ Cannot trigger locker: _iH function not available</div>';
+                return;
+            }
+
+            try {
+                console.log('Triggering AdBlueMedia locker for VALORANT Mobile...');
+                window._iH();
+                triggerStatus.innerHTML = '<div class="status success">✅ Locker triggered successfully! Check if offer popup appears.</div>';
+            } catch (error) {
+                triggerStatus.innerHTML = '<div class="status error">❌ Error triggering locker: ' + error.message + '</div>';
+                console.error('Locker trigger error:', error);
+            }
+        }
+
+        // Initialize tests
+        document.addEventListener('DOMContentLoaded', function() {
+            const status = document.getElementById('status');
+            
+            console.log('Starting AdBlueMedia integration test...');
+            
+            if (testConfiguration()) {
+                status.innerHTML = '<div class="status success">✅ Test environment initialized</div>';
+                testScriptLoading();
+            } else {
+                status.innerHTML = '<div class="status error">❌ Test environment failed to initialize</div>';
+            }
+        });
+    </script>
+</body>
+</html>
+EOF  
+cd /home/project && cd playvault && cat > test-valorant-adblue.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALORANT Mobile AdBlueMedia Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>VALORANT Mobile AdBlueMedia Integration Test</h1>
+    <div id="status" class="status warning">Initializing test...</div>
+    
+    <h3>Configuration Test:</h3>
+    <div id="config-status"></div>
+    
+    <h3>Script Loading Test:</h3>
+    <div id="script-status"></div>
+    
+    <h3>Function Test:</h3>
+    <div id="function-status"></div>
+    
+    <button onclick="testLockerTrigger()">Test Locker Trigger</button>
+    <div id="trigger-status"></div>
+
+    <script>
+        // AdBlueMedia configuration (matching the real app)
+        window.RnBWE_GjX_DURZcc = {
+            it: 4503226,
+            key: "af8d5"
+        };
+
+        // Test configuration
+        function testConfiguration() {
+            const configStatus = document.getElementById('config-status');
+            if (window.RnBWE_GjX_DURZcc && 
+                window.RnBWE_GjX_DURZcc.it === 4503226 && 
+                window.RnBWE_GjX_DURZcc.key === "af8d5") {
+                configStatus.innerHTML = '<div class="status success">✅ Configuration loaded correctly: it=4503226, key="af8d5"</div>';
+                return true;
+            } else {
+                configStatus.innerHTML = '<div class="status error">❌ Configuration not found or incorrect</div>';
+                return false;
+            }
+        }
+
+        // Test script loading
+        function testScriptLoading() {
+            const scriptStatus = document.getElementById('script-status');
+            const script = document.createElement('script');
+            script.src = 'https://dfmpe7igjx4jo.cloudfront.net/40bb691.js';
+            script.onload = function() {
+                scriptStatus.innerHTML = '<div class="status success">✅ AdBlueMedia script loaded successfully</div>';
+                testFunction();
+            };
+            script.onerror = function() {
+                scriptStatus.innerHTML = '<div class="status error">❌ Failed to load AdBlueMedia script</div>';
+            };
+            document.head.appendChild(script);
+        }
+
+        // Test function availability
+        function testFunction() {
+            const functionStatus = document.getElementById('function-status');
+            setTimeout(() => {
+                if (typeof window._iH === 'function') {
+                    functionStatus.innerHTML = '<div class="status success">✅ Function _iH is available and ready</div>';
+                } else {
+                    functionStatus.innerHTML = '<div class="status error">❌ Function _iH not found. Available functions: ' + 
+                        Object.getOwnPropertyNames(window).filter(prop => prop.startsWith('_')).join(', ') + '</div>';
+                }
+            }, 1000);
+        }
+
+        // Test locker trigger
+        function testLockerTrigger() {
+            const triggerStatus = document.getElementById('trigger-status');
+            
+            if (typeof window._iH !== 'function') {
+                triggerStatus.innerHTML = '<div class="status error">❌ Cannot trigger locker: _iH function not available</div>';
+                return;
+            }
+
+            try {
+                console.log('Triggering AdBlueMedia locker for VALORANT Mobile...');
+                window._iH();
+                triggerStatus.innerHTML = '<div class="status success">✅ Locker triggered successfully! Check if offer popup appears.</div>';
+            } catch (error) {
+                triggerStatus.innerHTML = '<div class="status error">❌ Error triggering locker: ' + error.message + '</div>';
+                console.error('Locker trigger error:', error);
+            }
+        }
+
+        // Initialize tests
+        document.addEventListener('DOMContentLoaded', function() {
+            const status = document.getElementById('status');
+            
+            console.log('Starting AdBlueMedia integration test...');
+            
+            if (testConfiguration()) {
+                status.innerHTML = '<div class="status success">✅ Test environment initialized</div>';
+                testScriptLoading();
+            } else {
+                status.innerHTML = '<div class="status error">❌ Test environment failed to initialize</div>';
+            }
+        });
+    </script>
+</body>
+</html>

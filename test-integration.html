@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdBlueMedia Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .test-button { padding: 10px 20px; margin: 10px 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .test-button:hover { background: #0056b3; }
+        .results { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>AdBlueMedia Integration Test</h1>
+    <div id="status" class="status warning">Loading AdBlueMedia script...</div>
+    
+    <div>
+        <h3>Test Actions:</h3>
+        <button class="test-button" onclick="testFunctionExists()">Test Function Exists</button>
+        <button class="test-button" onclick="testCallFunction()">Call _iH Function</button>
+        <button class="test-button" onclick="testConfiguration()">Test Configuration</button>
+        <button class="test-button" onclick="runAllTests()">Run All Tests</button>
+    </div>
+    
+    <div id="results" class="results" style="display: none;">
+        <h3>Test Results:</h3>
+        <div id="test-output"></div>
+    </div>
+
+    <!-- AdBlueMedia configuration (matching the real app) -->
+    <script>
+        // Define the global variable for AdBlueMedia (same as in index.html)
+        window.nUtRu_QzT_cplrFc = {
+            it: 4503226,
+            key: "bbe8f"
+        };
+
+        let testResults = [];
+
+        function logTest(name, passed, details) {
+            const result = {
+                name: name,
+                passed: passed,
+                details: details,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            testResults.push(result);
+            updateTestDisplay();
+        }
+
+        function updateTestDisplay() {
+            const output = document.getElementById('test-output');
+            const results = document.getElementById('results');
+            results.style.display = 'block';
+            
+            output.innerHTML = testResults.map(result => `
+                <div class="status ${result.passed ? 'success' : 'error'}">
+                    <strong>${result.name}</strong> [${result.timestamp}]<br>
+                    ${result.details}
+                </div>
+            `).join('');
+        }
+
+        function testFunctionExists() {
+            const exists = typeof window._iH === 'function';
+            logTest(
+                'Function Existence Check',
+                exists,
+                exists ? '✅ window._iH function is defined' : '❌ window._iH function is not defined'
+            );
+        }
+
+        function testCallFunction() {
+            try {
+                if (typeof window._iH === 'function') {
+                    console.log('Calling window._iH()...');
+                    window._iH();
+                    logTest(
+                        'Function Call Test',
+                        true,
+                        '✅ window._iH() called successfully (check for popup/redirect)'
+                    );
+                } else {
+                    logTest(
+                        'Function Call Test',
+                        false,
+                        '❌ Cannot call window._iH() - function not defined'
+                    );
+                }
+            } catch (error) {
+                logTest(
+                    'Function Call Test',
+                    false,
+                    `❌ Error calling window._iH(): ${error.message}`
+                );
+            }
+        }
+
+        function testConfiguration() {
+            const configExists = typeof window.nUtRu_QzT_cplrFc === 'object';
+            const hasIt = window.nUtRu_QzT_cplrFc?.it === 4503226;
+            const hasKey = window.nUtRu_QzT_cplrFc?.key === "bbe8f";
+            
+            const allValid = configExists && hasIt && hasKey;
+            
+            logTest(
+                'Configuration Test',
+                allValid,
+                `Configuration object: ${configExists ? '✅' : '❌'}<br>
+                 IT value (4503226): ${hasIt ? '✅' : '❌'}<br>
+                 Key value (bbe8f): ${hasKey ? '✅' : '❌'}`
+            );
+        }
+
+        function runAllTests() {
+            testResults = []; // Clear previous results
+            testConfiguration();
+            testFunctionExists();
+            
+            // Test available functions
+            const windowProps = Object.keys(window).filter(key => key.startsWith('_'));
+            logTest(
+                'Available Functions',
+                windowProps.length > 0,
+                `Found ${windowProps.length} functions starting with _:<br>${windowProps.join(', ') || 'None found'}`
+            );
+
+            // Test xfContentLocker
+            const xfExists = typeof window.xfContentLocker !== 'undefined';
+            logTest(
+                'xfContentLocker Check',
+                xfExists,
+                xfExists ? '✅ xfContentLocker is available' : '❌ xfContentLocker not found'
+            );
+        }
+
+        function checkScriptLoaded() {
+            const status = document.getElementById('status');
+            
+            if (typeof window._iH === 'function') {
+                status.className = 'status success';
+                status.innerHTML = '✅ AdBlueMedia script loaded successfully! Function _iH is available.';
+                
+                // Run initial tests
+                setTimeout(runAllTests, 1000);
+            } else {
+                status.className = 'status error';
+                status.innerHTML = '❌ AdBlueMedia script loaded but _iH function not found. Available functions: ' + 
+                                  Object.keys(window).filter(k => k.startsWith('_')).join(', ');
+            }
+        }
+
+        function handleScriptError() {
+            const status = document.getElementById('status');
+            status.className = 'status error';
+            status.innerHTML = '❌ Failed to load AdBlueMedia script from CloudFront';
+        }
+
+        // Check if we're in an environment that supports the locker
+        if (typeof window !== 'undefined') {
+            console.log('AdBlueMedia Integration Test initialized');
+            console.log('Configuration:', window.nUtRu_QzT_cplrFc);
+        }
+    </script>
+    
+    <!-- Load the actual AdBlueMedia script -->
+    <script src="https://dfmpe7igjx4jo.cloudfront.net/420ad58.js" 
+            onload="checkScriptLoaded()" 
+            onerror="handleScriptError()">
+    </script>
+</body>
+</html>

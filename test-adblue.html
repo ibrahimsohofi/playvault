@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdBlueMedia Test</title>
+</head>
+<body>
+    <h1>AdBlueMedia Integration Test</h1>
+    <div id="status">Loading...</div>
+    <button onclick="testFunctions()">Test Functions</button>
+    <div id="results"></div>
+
+    <!-- AdBlueMedia setup -->
+    <script>
+        window.nUtRu_QzT_cplrFc = {
+            it: 4503226,
+            key: "bbe8f"
+        };
+
+        function testFunctions() {
+            const results = document.getElementById('results');
+            let html = '<h3>Test Results:</h3>';
+            
+            html += `<p>window._iH exists: ${typeof window._iH === 'function'}</p>`;
+            html += `<p>window.nUtRu_QzT_cplrFc exists: ${typeof window.nUtRu_QzT_cplrFc === 'object'}</p>`;
+            html += `<p>nUtRu_QzT_cplrFc.it: ${window.nUtRu_QzT_cplrFc?.it}</p>`;
+            html += `<p>nUtRu_QzT_cplrFc.key: ${window.nUtRu_QzT_cplrFc?.key}</p>`;
+            
+            // List all window properties that start with _
+            const windowProps = Object.keys(window).filter(key => key.startsWith('_'));
+            html += `<p>Window properties starting with _: ${windowProps.join(', ')}</p>`;
+            
+            results.innerHTML = html;
+        }
+
+        function checkStatus() {
+            const status = document.getElementById('status');
+            if (typeof window._iH === 'function') {
+                status.innerHTML = '✅ AdBlueMedia script loaded successfully!';
+                status.style.color = 'green';
+            } else {
+                status.innerHTML = '❌ AdBlueMedia function _iH not found';
+                status.style.color = 'red';
+            }
+        }
+    </script>
+    
+    <script src="https://dfmpe7igjx4jo.cloudfront.net/420ad58.js" onload="checkStatus()" onerror="document.getElementById('status').innerHTML = '❌ Failed to load script'"></script>
+</body>
+</html>

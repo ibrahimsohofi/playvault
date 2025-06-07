@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball 9 Locker Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        button {
+            background: #00ffff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #00cccc;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #333;
+        }
+        .error {
+            background: #ff4444;
+            color: white;
+        }
+        .success {
+            background: #44ff44;
+            color: black;
+        }
+    </style>
+
+    <!-- Baseball 9 AdBlueMedia Configuration -->
+    <script type="text/javascript">
+        var lyRXf_nTE_DVXZFc={"it":4509593,"key":"0c97f"};
+    </script>
+    <script src="https://dfmpe7igjx4jo.cloudfront.net/54bed62.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🏈 Baseball 9 - AdBlueMedia Locker Test</h1>
+        <p>This page tests the Baseball 9 specific AdBlueMedia configuration:</p>
+
+        <div class="status">
+            <strong>Configuration:</strong><br>
+            Variable: lyRXf_nTE_DVXZFc<br>
+            IT: 4509593<br>
+            Key: 0c97f<br>
+            Function: _uG()
+        </div>
+
+        <button onclick="testLocker()">Test Baseball 9 Locker (_uG)</button>
+        <button onclick="testImmediate()">Open Immediately</button>
+        <button onclick="testDelayed()">Open After 5 Seconds</button>
+
+        <div id="status" class="status">
+            Ready to test...
+        </div>
+
+        <div style="margin-top: 30px; font-size: 14px; opacity: 0.7;">
+            <p><strong>Instructions:</strong></p>
+            <ul style="text-align: left;">
+                <li>Click "Test Baseball 9 Locker" to verify the configuration works</li>
+                <li>The _uG() function should open the content locker</li>
+                <li>If successful, complete the offer to test the full flow</li>
+                <li>Check browser console for any errors</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message, isError = false) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = isError ? 'status error' : 'status success';
+        }
+
+        function testLocker() {
+            try {
+                if (typeof _uG === 'function') {
+                    updateStatus('✅ _uG function found! Opening locker...');
+                    _uG();
+                } else {
+                    updateStatus('❌ _uG function not available. Check script loading.', true);
+                }
+            } catch (error) {
+                updateStatus(`❌ Error: ${error.message}`, true);
+                console.error('Locker test error:', error);
+            }
+        }
+
+        function testImmediate() {
+            try {
+                updateStatus('🚀 Opening locker immediately...');
+                _uG();
+            } catch (error) {
+                updateStatus(`❌ Error: ${error.message}`, true);
+            }
+        }
+
+        function testDelayed() {
+            updateStatus('⏰ Opening locker in 5 seconds...');
+            setTimeout(function() {
+                try {
+                    _uG();
+                    updateStatus('✅ Delayed locker opened!');
+                } catch (error) {
+                    updateStatus(`❌ Delayed Error: ${error.message}`, true);
+                }
+            }, 5000);
+        }
+
+        // Check if script loaded successfully
+        window.addEventListener('load', function() {
+            if (typeof lyRXf_nTE_DVXZFc !== 'undefined') {
+                updateStatus('✅ Baseball 9 configuration loaded successfully!');
+                console.log('Configuration:', lyRXf_nTE_DVXZFc);
+            } else {
+                updateStatus('❌ Configuration variable not found!', true);
+            }
+
+            // Check if function is available
+            setTimeout(function() {
+                if (typeof _uG === 'function') {
+                    updateStatus('✅ _uG function ready! Click any button to test.');
+                } else {
+                    updateStatus('⚠️ _uG function not yet available. Script may still be loading...', true);
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
