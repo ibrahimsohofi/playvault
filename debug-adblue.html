@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdBlueMedia Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background-color: #2a2a2a;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .error {
+            color: #ff4444;
+        }
+        .success {
+            color: #44ff44;
+        }
+        .info {
+            color: #4444ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>AdBlueMedia Debug Test</h1>
+
+    <div class="test-section">
+        <h2>1. Ad Blocker Detection</h2>
+        <button onclick="testAdBlocker()">Test Ad Blocker</button>
+        <div id="ad-blocker-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. External Script Loading Test</h2>
+        <button onclick="testScriptLoading()">Test Script Loading</button>
+        <div id="script-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. CORS Policy Test</h2>
+        <button onclick="testCORS()">Test CORS</button>
+        <div id="cors-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. AdBlueMedia Config Test</h2>
+        <button onclick="testAdBlueConfig('clash-of-clans')">Test Clash of Clans</button>
+        <button onclick="testAdBlueConfig('free-fire')">Test Free Fire</button>
+        <button onclick="testAdBlueConfig('pubg-mobile')">Test PUBG Mobile</button>
+        <div id="config-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Real AdBlueMedia Loading</h2>
+        <button onclick="loadRealAdBlue()">Load Real AdBlue Script</button>
+        <div id="real-adblue-result"></div>
+        <div id="adblue-container" style="min-height: 200px; border: 1px dashed #666; margin: 10px 0;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Debug Log</h2>
+        <button onclick="clearLog()">Clear Log</button>
+        <div id="debug-log" class="log"></div>
+    </div>
+
+    <script>
+        // AdBlueMedia configurations
+        const GAME_CONFIGS = {
+            'clash-of-clans': {
+                variable: 'RnBWE_GjX_DURZcc',
+                it: 4503226,
+                key: 'af8d5',
+                scriptSrc: 'https://dfmpe7igjx4jo.cloudfront.net/40bb691.js',
+                functionName: '_RH'
+            },
+            'free-fire': {
+                variable: 'Tonbz_dyP_lLljic',
+                it: 4510531,
+                key: 'eb00e',
+                scriptSrc: 'https://dfmpe7igjx4jo.cloudfront.net/4aece94.js',
+                functionName: '_Tz'
+            },
+            'pubg-mobile': {
+                variable: 'WnlWQ_NVr_CRsTyc',
+                it: 4510529,
+                key: 'eb283',
+                scriptSrc: 'https://dlk457skl57zp.cloudfront.net/74d5a96.js',
+                functionName: '_WQ'
+            }
+        };
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logLine = `[${timestamp}] ${message}\n`;
+            logElement.innerHTML += `<span class="${type}">${logLine}</span>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('debug-log').innerHTML = '';
+        }
+
+        // 1. Test Ad Blocker Detection
+        function testAdBlocker() {
+            log('Testing ad blocker detection...', 'info');
+
+            let testDiv = null;
+            try {
+                testDiv = document.createElement('div');
+                testDiv.innerHTML = '&nbsp;';
+                testDiv.className = 'adsbox ad-unit';
+                testDiv.style.position = 'absolute';
+                testDiv.style.left = '-10000px';
+                testDiv.style.top = '-10000px';
+                testDiv.style.width = '1px';
+                testDiv.style.height = '1px';
+
+                document.body.appendChild(testDiv);
+
+                setTimeout(() => {
+                    const blocked = testDiv.offsetHeight === 0 || testDiv.offsetWidth === 0 || testDiv.offsetParent === null;
+                    const result = blocked ? 'Ad blocker detected!' : 'No ad blocker detected';
+                    const resultType = blocked ? 'error' : 'success';
+
+                    document.getElementById('ad-blocker-result').innerHTML =
+                        `<span class="${resultType}">${result}</span>`;
+                    log(result, resultType);
+
+                    if (testDiv && testDiv.parentNode) {
+                        testDiv.parentNode.removeChild(testDiv);
+                    }
+                }, 100);
+
+            } catch (error) {
+                log(`Ad blocker test error: ${error.message}`, 'error');
+                document.getElementById('ad-blocker-result').innerHTML =
+                    `<span class="error">Test failed: ${error.message}</span>`;
+            }
+        }
+
+        // 2. Test External Script Loading
+        function testScriptLoading() {
+            log('Testing external script loading...', 'info');
+
+            const testUrl = 'https://dfmpe7igjx4jo.cloudfront.net/40bb691.js';
+
+            fetch(testUrl, { method: 'HEAD', mode: 'no-cors' })
+                .then(() => {
+                    log('Script URL is accessible', 'success');
+                    document.getElementById('script-result').innerHTML =
+                        '<span class="success">External script URL is accessible</span>';
+                })
+                .catch(error => {
+                    log(`Script loading test failed: ${error.message}`, 'error');
+                    document.getElementById('script-result').innerHTML =
+                        `<span class="error">Script loading failed: ${error.message}</span>`;
+                });
+        }
+
+        // 3. Test CORS Policies
+        function testCORS() {
+            log('Testing CORS policies...', 'info');
+
+            const corsUrls = [
+                'https://dfmpe7igjx4jo.cloudfront.net/40bb691.js',
+                'https://dlk457skl57zp.cloudfront.net/74d5a96.js'
+            ];
+
+            let results = [];
+
+            corsUrls.forEach((url, index) => {
+                fetch(url, { mode: 'cors' })
+                    .then(response => {
+                        const result = `URL ${index + 1}: OK (${response.status})`;
+                        results.push(result);
+                        log(result, 'success');
+                    })
+                    .catch(error => {
+                        const result = `URL ${index + 1}: FAILED (${error.message})`;
+                        results.push(result);
+                        log(result, 'error');
+                    })
+                    .finally(() => {
+                        if (results.length === corsUrls.length) {
+                            document.getElementById('cors-result').innerHTML =
+                                results.map(r => `<div>${r}</div>`).join('');
+                        }
+                    });
+            });
+        }
+
+        // 4. Test AdBlueMedia Configuration
+        function testAdBlueConfig(gameId) {
+            log(`Testing AdBlueMedia config for ${gameId}...`, 'info');
+
+            const config = GAME_CONFIGS[gameId];
+            if (!config) {
+                log(`No config found for ${gameId}`, 'error');
+                return;
+            }
+
+            log(`Config loaded: ${JSON.stringify(config)}`, 'info');
+
+            // Test if the configuration variables are valid
+            const validation = {
+                variable: /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(config.variable),
+                it: typeof config.it === 'number',
+                key: typeof config.key === 'string' && config.key.length > 0,
+                scriptSrc: config.scriptSrc.startsWith('https://'),
+                functionName: /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(config.functionName)
+            };
+
+            const isValid = Object.values(validation).every(v => v);
+            const resultType = isValid ? 'success' : 'error';
+            const result = isValid ? 'Configuration is valid' : 'Configuration has issues';
+
+            log(`${result}: ${JSON.stringify(validation)}`, resultType);
+            document.getElementById('config-result').innerHTML =
+                `<div class="${resultType}">${result}</div><pre>${JSON.stringify(validation, null, 2)}</pre>`;
+        }
+
+        // 5. Load Real AdBlueMedia Script
+        function loadRealAdBlue() {
+            log('Loading real AdBlueMedia script...', 'info');
+
+            const config = GAME_CONFIGS['clash-of-clans'];
+            const container = document.getElementById('adblue-container');
+
+            try {
+                // Set up the global variable
+                window[config.variable] = {
+                    it: config.it,
+                    key: config.key
+                };
+
+                log(`Global variable ${config.variable} set`, 'success');
+
+                // Load the script
+                const script = document.createElement('script');
+                script.src = config.scriptSrc;
+                script.type = 'text/javascript';
+
+                script.onload = () => {
+                    log('AdBlueMedia script loaded successfully', 'success');
+
+                    setTimeout(() => {
+                        log(`Checking for function: ${config.functionName}`, 'info');
+
+                        if (window[config.functionName] && typeof window[config.functionName] === 'function') {
+                            log(`Function ${config.functionName} is available!`, 'success');
+
+                            document.getElementById('real-adblue-result').innerHTML =
+                                `<div class="success">Script loaded and function available!</div>
+                                 <button onclick="callAdBlueFunction('${config.functionName}')">Call ${config.functionName}()</button>`;
+                        } else {
+                            log(`Function ${config.functionName} not found`, 'error');
+                            log(`Available window functions: ${Object.keys(window).filter(k => k.startsWith('_')).join(', ')}`, 'info');
+
+                            document.getElementById('real-adblue-result').innerHTML =
+                                '<div class="error">Function not available after script load</div>';
+                        }
+                    }, 1000);
+                };
+
+                script.onerror = (error) => {
+                    log(`Script loading failed: ${error}`, 'error');
+                    document.getElementById('real-adblue-result').innerHTML =
+                        '<div class="error">Script loading failed</div>';
+                };
+
+                document.head.appendChild(script);
+
+            } catch (error) {
+                log(`Error loading AdBlueMedia: ${error.message}`, 'error');
+                document.getElementById('real-adblue-result').innerHTML =
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        function callAdBlueFunction(functionName) {
+            try {
+                log(`Calling ${functionName}()...`, 'info');
+                window[functionName]();
+                log(`${functionName}() called successfully`, 'success');
+            } catch (error) {
+                log(`Error calling ${functionName}(): ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            log('Debug page loaded', 'info');
+            log(`User Agent: ${navigator.userAgent}`, 'info');
+            log(`Current URL: ${window.location.href}`, 'info');
+        });
+    </script>
+</body>
+</html>
