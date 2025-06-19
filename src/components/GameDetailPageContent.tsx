@@ -177,9 +177,7 @@ export default function GameDetailPageContent() {
       setDownloading(true);
       setShowError(false);
 
-      // Simulate download process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
+      // Immediate download - no verification delay
       // For demo purposes, show a success message
       queueDialog({
         type: 'success',
@@ -491,7 +489,7 @@ export default function GameDetailPageContent() {
                   {downloading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Verifying...
+                      DOWNLOADING...
                     </>
                   ) : (
                     <>

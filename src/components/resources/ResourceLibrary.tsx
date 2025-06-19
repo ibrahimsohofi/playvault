@@ -40,10 +40,6 @@ export function ResourceLibrary({ initialCategory = null }: ResourceLibraryProps
   // Download state
   const [downloading, setDownloading] = useState(false);
 
-  // Verification dialog state
-  const [verifying, setVerifying] = useState(false);
-  const [pendingResource, setPendingResource] = useState<GameResource | null>(null);
-
   // Simulate initial loading state
   useEffect(() => {
     setIsLoading(true);
@@ -143,14 +139,6 @@ export function ResourceLibrary({ initialCategory = null }: ResourceLibraryProps
     } finally {
       setDownloading(false);
     }
-  };
-
-  const handleVerificationComplete = () => {
-    if (pendingResource) {
-      setSelectedResource(pendingResource);
-    }
-    setVerifying(false);
-    setPendingResource(null);
   };
 
   const handleSearch = (query: string) => {
