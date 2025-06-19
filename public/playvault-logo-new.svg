@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="240" height="60" viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Game controller shape -->
+  <path d="M30 15C25 15 20 20 20 25V35C20 40 25 45 30 45H50C55 45 60 40 60 35V25C60 20 55 15 50 15H30Z" fill="#00f7ff" fill-opacity="0.2" stroke="#00f7ff" stroke-width="2"/>
+  
+  <!-- Controller buttons -->
+  <circle cx="45" cy="25" r="4" fill="#00f7ff"/>
+  <circle cx="55" cy="30" r="4" fill="#00f7ff"/>
+  <circle cx="35" cy="30" r="4" fill="#00f7ff"/>
+  <circle cx="45" cy="35" r="4" fill="#00f7ff"/>
+  
+  <!-- D-pad -->
+  <rect x="25" y="25" width="10" height="2" fill="#00f7ff"/>
+  <rect x="29" y="21" width="2" height="10" fill="#00f7ff"/>
+  
+  <!-- Text -->
+  <path d="M75 20H80V40H75V20Z" fill="#00f7ff"/>
+  <path d="M85 20H95C97 20 99 22 99 25V35C99 38 97 40 95 40H85V20ZM90 25V35H94C95 35 95 34 95 33V27C95 26 95 25 94 25H90Z" fill="#00f7ff"/>
+  <path d="M105 20H110V35H120V40H105V20Z" fill="#00f7ff"/>
+  <path d="M125 20H140V25H130V28H138V33H130V40H125V20Z" fill="#00f7ff"/>
+  <path d="M145 20H165V25H150V28H160V33H150V35H165V40H145V20Z" fill="#00f7ff"/>
+  <path d="M170 20H185C187 20 190 22 190 25V35C190 38 187 40 185 40H170V20ZM175 25V35H184C185 35 185 34 185 33V27C185 26 185 25 184 25H175Z" fill="#00f7ff"/>
+  <path d="M195 20H210C212 20 215 22 215 25V40H210V25H205V40H200V25H195V20Z" fill="#00f7ff"/>
+  <path d="M220 20H225V40H220V20Z" fill="#00f7ff"/>
+  <path d="M230 20H235V35H240V40H230V20Z" fill="#00f7ff"/>
+  
+  <!-- Glow effect -->
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="2" result="blur"/>
+    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+  </filter>
+  
+  <g filter="url(#glow)">
+    <path d="M30 15C25 15 20 20 20 25V35C20 40 25 45 30 45H50C55 45 60 40 60 35V25C60 20 55 15 50 15H30Z" stroke="#00f7ff" stroke-width="0.5"/>
+  </g>
+</svg>

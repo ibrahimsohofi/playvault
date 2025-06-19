@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M20 10H40V50H20V10Z" fill="#00f7ff" />
+  <path d="M45 10H65V50H45V10Z" fill="#00f7ff" />
+  <path d="M70 10H90V30H70V10Z" fill="#00f7ff" />
+  <path d="M70 35H90V50H70V35Z" fill="#00f7ff" />
+  <path d="M95 10H115V50H95V10Z" fill="#00f7ff" />
+  <path d="M120 10H140V50H120V10Z" fill="#00f7ff" />
+  <path d="M145 10H165V30H145V10Z" fill="#00f7ff" />
+  <path d="M145 35H165V50H145V35Z" fill="#00f7ff" />
+  <path d="M170 10H190V50H170V10Z" fill="#00f7ff" />
+  <text x="20" y="65" font-family="Arial" font-size="12" fill="#00f7ff">PLAYVAULT</text>
+</svg>

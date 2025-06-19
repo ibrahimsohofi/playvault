@@ -1,0 +1,13 @@
+# Allow all web crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin pages (if any)
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://www.playvault.app/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1

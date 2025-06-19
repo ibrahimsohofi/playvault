@@ -1,0 +1,85 @@
+{
+  "name": "PlayVault - Game Downloads Hub",
+  "short_name": "PlayVault",
+  "description": "Your ultimate destination for downloading popular games with advanced security features",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e1b4b",
+  "theme_color": "#00f7ff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Games",
+      "short_name": "Games",
+      "description": "Browse all available games",
+      "url": "/games",
+      "icons": [
+        {
+          "src": "/logo.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "My Wishlist",
+      "short_name": "Wishlist",
+      "description": "View your game wishlist",
+      "url": "/wishlist",
+      "icons": [
+        {
+          "src": "/logo.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Game Categories",
+      "short_name": "Categories",
+      "description": "Browse games by category",
+      "url": "/categories",
+      "icons": [
+        {
+          "src": "/logo.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "capture_links": "existing-client-navigate"
+}
